@@ -1,0 +1,97 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<modification>
+  <name>PayPal Plus para OpenCart 2.3.x</name>
+  <code>paypal-plus</code>
+  <version>1.0.0</version>
+  <author>PayPal Brasil</author>
+  <link>https://www.paypal.com/br/</link>
+  <file path="admin/controller/startup/permission.php">
+    <operation>
+      <search><![CDATA[$extension = array(]]></search>
+      <add position="after"><![CDATA['extension/paypal_plus',]]></add>
+    </operation>
+  </file>
+  <file path="admin/controller/common/column_left.php">
+    <operation>
+      <search><![CDATA[if ($sale) {]]></search>
+      <add position="before"><![CDATA[
+        // Paypal Plus
+        $this->load->language('extension/paypal_plus/menu');
+
+        $paypal_plus = array();
+
+        if ($this->user->hasPermission('access', 'extension/paypal_plus/transaction')) {
+            $paypal_plus[] = array(
+                'name' => $this->language->get('text_paypal_plus_transaction'),
+                'href' => $this->url->link('extension/paypal_plus/transaction', 'token=' . $this->session->data['token'], true),
+                'children' => array()
+            );
+        }
+
+        if ($this->user->hasPermission('access', 'extension/paypal_plus/log')) {
+            $paypal_plus[] = array(
+                'name' => $this->language->get('text_paypal_plus_log'),
+                'href' => $this->url->link('extension/paypal_plus/log', 'token=' . $this->session->data['token'], true),
+                'children' => array()
+            );
+        }
+
+        if ($paypal_plus) {
+            $sale[] = array(
+                'name' => $this->language->get('text_paypal_plus'),
+                'href' => '',
+                'children' => $paypal_plus
+            );
+        }
+      ]]></add>
+    </operation>
+  </file>
+  <file path="catalog/controller/checkout/checkout.php" error="skip">
+    <operation>
+      <search><![CDATA[public function index() {]]></search>
+      <add position="after"><![CDATA[
+        $this->document->addScript('https://www.paypalobjects.com/webstatic/ppplusdcc/ppplusdcc.min.js');
+      ]]></add>
+    </operation>
+  </file>
+  <file path="catalog/controller/onecheckout/checkout.php" error="skip">
+    <operation>
+      <search><![CDATA[public function index() {]]></search>
+      <add position="after"><![CDATA[
+        $this->document->addScript('https://www.paypalobjects.com/webstatic/ppplusdcc/ppplusdcc.min.js');
+      ]]></add>
+    </operation>
+  </file>
+  <file path="catalog/controller/quickcheckout/checkout.php" error="skip">
+    <operation>
+      <search><![CDATA[public function index() {]]></search>
+      <add position="after"><![CDATA[
+        $this->document->addScript('https://www.paypalobjects.com/webstatic/ppplusdcc/ppplusdcc.min.js');
+      ]]></add>
+    </operation>
+  </file>
+  <file path="catalog/controller/checkout/compraexpress.php" error="skip">
+    <operation>
+      <search><![CDATA[public function index() {]]></search>
+      <add position="after"><![CDATA[
+        $this->document->addScript('https://www.paypalobjects.com/webstatic/ppplusdcc/ppplusdcc.min.js');
+      ]]></add>
+    </operation>
+  </file>
+  <file path="catalog/controller/module/onecheckout.php" error="skip">
+    <operation>
+      <search><![CDATA[public function index() {]]></search>
+      <add position="after"><![CDATA[
+        $this->document->addScript('https://www.paypalobjects.com/webstatic/ppplusdcc/ppplusdcc.min.js');
+      ]]></add>
+    </operation>
+  </file>
+  <file path="catalog/controller/module/d_quickcheckout.php" error="skip">
+    <operation>
+      <search><![CDATA[public function index() {]]></search>
+      <add position="after"><![CDATA[
+        $this->document->addScript('https://www.paypalobjects.com/webstatic/ppplusdcc/ppplusdcc.min.js');
+      ]]></add>
+    </operation>
+  </file>
+</modification>

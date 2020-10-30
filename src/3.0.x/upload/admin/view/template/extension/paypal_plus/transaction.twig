@@ -1,0 +1,431 @@
+{{ header }}{{ column_left }}
+<div id="content">
+  <div class="page-header">
+    <div class="container-fluid">
+      <h1>{{ heading_title }}</h1>
+      <ul class="breadcrumb">
+        {% for breadcrumb in breadcrumbs %}
+        <li><a href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a></li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+  <div class="container-fluid">
+    {% if sandbox %}
+    <div class="alert alert-warning"><i class="fa fa-exclamation-triangle"></i> {{ text_sandbox }}</div>
+    {% endif %}
+    <div class="alert alert-info"><i class="fa fa-info-circle"></i> {{ info_filter }}</div>
+    <div id="progress"></div>
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title"><i class="fa fa-list"></i> {{ text_list }}</h3>
+      </div>
+      <div class="panel-body">
+        <div class="well">
+          <div class="row">
+            <div class="col-sm-4">
+              <div class="form-group">
+                <label class="control-label">{{ entry_initial_date }}</label>
+                <div class="input-group">
+                  <div class="input-group-addon"><i class="fa fa-calendar"></i></div>
+                  <input type="text" name="filter_initial_date" value="{{ filter_initial_date }}" class="form-control date" readonly />
+                </div>
+              </div>
+            </div>
+            <div class="col-sm-4">
+              <div class="form-group">
+                <label class="control-label">{{ entry_final_date }}</label>
+                <div class="input-group">
+                  <div class="input-group-addon"><i class="fa fa-calendar"></i></div>
+                  <input type="text" name="filter_final_date" value="{{ filter_final_date }}" class="form-control date" readonly />
+                </div>
+              </div>
+            </div>
+            <div class="col-sm-4">
+              <div class="form-group">
+                <label class="control-label">{{ entry_status }}</label>
+                <select name="filter_status" class="form-control">
+                  {% for key, value in statuses %}
+                  {% if key == filter_status %}
+                  <option value="{{ key }}" selected="selected">{{ value }}</option>
+                  {% else %}
+                  <option value="{{ key }}">{{ value }}</option>
+                  {% endif %}
+                  {% endfor %}
+                </select>
+              </div>
+              <button type="button" id="button-filter" class="btn btn-primary pull-right"><i class="fa fa-search"></i> {{ button_filter }}</button>
+            </div>
+          </div>
+        </div>
+        <div class="table-responsive">
+          <table id="paypal-plus" style="min-width:100% !important;" class="table table-bordered table-hover">
+            <thead>
+              <tr>
+                <th style="min-width: 80px !important;" class="text-center">{{ column_order_id }}</th>
+                <th style="min-width: 120px !important;" class="text-center">{{ column_date_added }}</th>
+                <th style="min-width: 220px !important;" class="text-left">{{ column_customer }}</th>
+                <th style="min-width: 220px !important;" class="text-center">{{ column_payment_id }}</th>
+                <th style="min-width: 80px !important;" class="text-center">{{ column_total }}</th>
+                <th style="min-width: 120px !important;" class="text-center">{{ column_status }}</th>
+                <th style="min-width: 130px !important;" class="text-center">{{ column_action }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% if transactions %}
+              {% for transaction in transactions %}
+              <tr>
+                <td class="text-center"><a href="{{ transaction.view_order }}">{{ transaction.order_id }}</a></td>
+                <td class="text-center">{{ transaction.date_added }}</td>
+                <td class="text-left">{{ transaction.customer }}</td>
+                <td class="text-center">{{ transaction.payment_id }}</td>
+                <td class="text-center">{{ transaction.total_value }}</td>
+                <td class="text-center" id="text-status-{{ transaction.id }}">{{ transaction.status }}</td>
+                <td class="text-center">
+                  {% for action in transaction.action %}
+                  <button type="button" data-toggle="tooltip" title="{{ action.title }}" class="{{ action.class }}" name="{{ action.name }}" id="{{ action.id }}"><i class="{{ action.icon }}"></i></button>
+                  {% endfor %}
+                </td>
+              </tr>
+              {% endfor %}
+              {% else %}
+              <tr>
+                <td class="text-center" colspan="7">{{ text_no_results }}</td>
+              </tr>
+              {% endif %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="modal fade" id="refund" tabindex="-1" role="dialog" aria-labelledby="refund" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-md" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+          <h4 class="modal-title">{{ modal_title_refund }}</h4>
+        </div>
+        <form id="form_refund" method="post">
+          <div class="modal-body">
+            <div class="progress-modal"></div>
+            <p>{{ modal_invoice_number }} <strong class="text-invoice"></strong></p>
+            <p>{{ modal_approved }} <strong class="text-approved"></strong></p>
+            <p>{{ modal_installments }} <strong class="text-installments"></strong></p>
+            <p>{{ modal_refunded }} <strong class="text-refunded"></strong></p>
+            <p>{{ modal_status }} <strong class="text-status"></strong></p>
+            <input type="hidden" name="paypal_plus_id" id="paypal_plus_id">
+            <input type="hidden" name="total_value" id="total_value">
+            <div class="form-group">
+              <p>{{ modal_solution }}</p>
+              <label class="control-label" for="refund_value">{{ modal_refund }}</label>
+              <input type="tel" value="" id="refund_value" required maxlength="12" name="refund_value" placeholder="{{ modal_refund }}" class="form-control value" autocomplete="off">
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">{{ modal_close }}</button>
+            <button type="submit" class="btn btn-primary" id="btnSubmit">{{ modal_send }}</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  <div class="modal fade" id="details" tabindex="-1" role="dialog" aria-labelledby="details" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-md" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+          <h4 class="modal-title">{{ modal_title_details }}</h4>
+        </div>
+        <div class="modal-body">
+          <div class="progress-modal"></div>
+          <ul class="nav nav-tabs">
+            <li class="active"><a href="#tab-details" data-toggle="tab">{{ tab_details }}</a></li>
+            <li><a href="#tab-last-json" data-toggle="tab">{{ tab_last_json }}</a></li>
+          </ul>
+          <div class="tab-content">
+            <div class="tab-pane active" id="tab-details">
+              <p>{{ modal_payer_name }} <strong class="text-client"></strong></p>
+              <p>{{ modal_payer_email }} <strong class="text-email"></strong></p>
+              <p>{{ modal_invoice_number }} <strong class="text-invoice"></strong></p>
+              <p>{{ modal_approved }} <strong class="text-approved"></strong></p>
+              <p>{{ modal_installments }} <strong class="text-installments"></strong></p>
+              <p>{{ modal_refunded }} <strong class="text-refunded"></strong></p>
+              <p>{{ modal_status }} <strong class="text-status"></strong></p>
+            </div>
+            <div class="tab-pane" id="tab-last-json">
+              <pre><code id="last-json"></code></pre>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">{{ modal_close }}</button>
+          <button type="submit" class="btn btn-primary" value="" name="button-search">{{ button_search }}</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/bootbox.js/4.4.0/bootbox.min.js"></script>
+  <script type="text/javascript"><!--
+    $('.date').datetimepicker({
+      language: 'pt-br',
+      pickTime: false,
+      format: 'YYYY-MM-DD'
+    });
+
+    $(document).ready(function() {
+      $('#paypal-plus').DataTable({
+        "order": [],
+        "columnDefs": [ {"targets": 6, "searchable": false, "orderable": false} ],
+        "deferRender": true,
+        "language": {
+          "url": "//cdn.datatables.net/plug-ins/1.10.21/i18n/Portuguese-Brasil.json"
+        },
+        "dom": 'Bfrtip',
+        "buttons": [
+          {
+            text: '{{ button_print }}',
+            extend: 'print',
+            autoPrint: false,
+            exportOptions: {
+              columns: ':visible'
+            }
+          },
+          {
+            text: '{{ button_copy }}',
+            extend: 'copyHtml5',
+            exportOptions: {
+              columns: ':visible'
+            }
+          },
+          {
+            text: '{{ button_csv }}',
+            extend: 'csvHtml5',
+            exportOptions: {
+              columns: ':visible'
+            }
+          },
+          {
+            text: '{{ button_excel }}',
+            extend: 'excelHtml5',
+            exportOptions: {
+              columns: ':visible'
+            }
+          },
+          {
+            text: '{{ button_pdf }}',
+            extend: 'pdfHtml5',
+            orientation: 'landscape',
+            pageSize: 'LEGAL',
+            exportOptions: {
+              columns: ':visible'
+            }
+          },
+          {
+            text: '{{ button_columns }}',
+            extend: 'colvis'
+          }
+        ]
+      });
+    });
+
+    $('button[name="button-info"]').click(function() {
+      $('.progress-modal').html('');
+      getDataTransaction($(this).attr('id'));
+      $('#details').modal('show');
+      $('#details ul.nav.nav-tabs a:first').tab('show');
+    });
+
+    $('button[name="button-search"]').click(function() {
+      $.ajax({
+        url: 'index.php?route=extension/paypal_plus/transaction/search&user_token={{ user_token }}&paypal_plus_id=' + $('#paypal_plus_id').val(),
+        dataType: 'json',
+        beforeSend: function() {
+          $(this).prop('disabled', true);
+          $('.progress-modal').html('<div class="alert alert-warning"><i class="fa fa-spinner fa-spin"></i> {{ text_consulting }}</div>');
+        },
+        complete: function() {
+          $(this).prop('disabled', false);
+        },
+        success: function(json) {
+          if (json['error']) {
+            $('.progress-modal').html('<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> ' + json['error'] + '</div>');
+          } else {
+            $('.alert alert-danger').remove();
+            getDataTransaction($('#paypal_plus_id').val());
+            $('.progress-modal').html('<div class="alert alert-success"><i class="fa fa-check-circle"></i> ' + json['success'] + '</div>');
+          }
+        }
+      });
+    });
+
+    $('button[name="button-refund"]').click(function() {
+      $('.progress-modal').html('');
+      getDataTransaction($(this).attr('id'));
+      $('#refund').modal('show');
+    });
+
+    $('#form_refund').on('submit', function(event) {
+      event.preventDefault();
+
+      if (
+        validateValue($('#refund_value').val())
+      ) {
+        const paypal_plus_id = $('#paypal_plus_id').val();
+        const formRefund = $(this).serialize();
+
+        bootbox.confirm({
+          message: "{{ text_confirm_refund }}",
+          buttons: {
+            confirm: { label: '<i class="fa fa-check"></i> {{ text_confirm_yes }}', className: 'btn-success' },
+            cancel: { label: '{{ text_no }}', className: 'btn-danger' }
+          },
+          callback: function (result) {
+            if (result === true) {
+              $.ajax({
+                url: 'index.php?route=extension/paypal_plus/transaction/refund&user_token={{ user_token }}&paypal_plus_id=' + paypal_plus_id,
+                dataType: 'json',
+                method: 'post',
+                data: formRefund,
+                beforeSend: function() {
+                  $('input').prop('disabled', true);
+                  $('button').prop('disabled', true);
+                  $('.progress-modal').html('<div class="alert alert-warning"><i class="fa fa-spinner fa-spin"></i> {{ text_request_refund }}</div>');
+                },
+                complete: function() {
+                  $('input').prop('disabled', false);
+                  $('button').prop('disabled', false);
+                },
+                success: function(json) {
+                  if (json['error']) {
+                    $('.progress-modal').html('<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> ' + json['error'] + '</div>');
+                  } else {
+                    $('.alert alert-danger').remove();
+                    $('.progress-modal').html('<div class="alert alert-success"><i class="fa fa-check-circle"></i> ' + json['success'] + '</div>');
+                    getDataTransaction(paypal_plus_id);
+                  }
+                }
+              });
+            }
+          }
+        });
+      }
+    });
+
+    function getDataTransaction(id) {
+      $.get('index.php?route=extension/paypal_plus/transaction/dataTransaction&user_token={{ user_token }}&paypal_plus_id=' + id, function(data) {
+        $('.text-client').text(data.payer_name);
+        $('.text-email').text(data.payer_email);
+        $('.text-invoice').text(data.invoice_number);
+        $('.text-approved').text(data.total_value_txt);
+        $('.text-refunded').text(data.refunded_value_txt);
+        $('.text-installments').text(data.installments + 'x');
+        $('.text-status').text(data.status);
+        $('#text-status-' + data.paypal_plus_id).text(data.status);
+        $('#total_value').val(data.total_value);
+        $('#refund_value').val('0.00');
+        $('#paypal_plus_id').val(data.paypal_plus_id);
+        $('#last-json').text(data.json);
+      });
+    }
+
+    $('button[name="button-delete"]').click(function() {
+      const id = $(this).attr('id');
+
+      bootbox.confirm({
+        message: "{{ text_confirm_delete }}",
+        buttons: {
+          confirm: { label: '<i class="fa fa-check"></i> {{ text_confirm_yes }}', className: 'btn-success' },
+          cancel: { label: '{{ text_no }}', className: 'btn-danger' }
+        },
+        callback: function (result) {
+          if (result === true) {
+            $.ajax({
+              url: 'index.php?route=extension/paypal_plus/transaction/delete&user_token={{ user_token }}&paypal_plus_id=' + id,
+              dataType: 'json',
+              beforeSend: function() {
+                $(this).prop('disabled', true);
+                $('#progress').html('<div class="alert alert-warning"><i class="fa fa-spinner fa-spin"></i> {{ text_excluding }}</div>');
+                $('html, body').animate({ scrollTop: 0 }, 'slow');
+              },
+              complete: function() {
+                $(this).prop('disabled', false);
+              },
+              success: function(json) {
+                $('html, body').animate({ scrollTop: 0 }, 'slow');
+                if (json['error']) {
+                  $('#progress').html('<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> ' + json['error'] + '</div>');
+                } else {
+                  $('.alert alert-danger').remove();
+                  $('#progress').html('<div class="alert alert-success"><i class="fa fa-check-circle"></i> ' + json['success'] + '</div>');
+                  location.href = location.href;
+                }
+              }
+            });
+          }
+        }
+      });
+    });
+
+    function validateValue(refund) {
+      $('.progress-modal').html('');
+
+      let error_refund = false;
+
+      if (parseFloat(refund) == 0) {
+        error_refund = '{{ error_value_zero }}';
+      }
+
+      if (error_refund) {
+        $('.progress-modal').html('<div class="alert alert-danger"><i class="fa fa-check-circle"></i> ' + error_refund + '</div>');
+
+        return false;
+      }
+
+      return true;
+    }
+
+    $('#refund_value').keyup(function() {
+      let refund = $(this).val().replace(/[\D]+/g, '');
+
+      if (refund.length < 3) {
+        refund = ('000' + refund).slice(-3);
+      }
+
+      refund = refund.replace(/([0-9]{2})$/g, ".$1");
+
+      $('#refund_value').val(Number(refund).toFixed(2));
+    });
+
+    $('#button-filter').on('click', function() {
+      let filter_url = 'index.php?route=extension/paypal_plus/transaction&user_token={{ user_token }}';
+
+      const filter_initial_date = $('input[name="filter_initial_date"]').val();
+      const filter_final_date = $('input[name="filter_final_date"]').val();
+      const filter_status = $('select[name="filter_status"]').val();
+
+      if (filter_initial_date) {
+        filter_url += `&filter_initial_date=${filter_initial_date}`;
+      }
+
+      if (filter_final_date) {
+        filter_url += `&filter_final_date=${filter_final_date}`;
+      }
+
+      if (filter_status) {
+        filter_url += `&filter_status=${filter_status}`;
+      }
+
+      location.href = filter_url.replace(/&amp;/g, '&');
+    });
+  //--></script>
+  <style>
+    pre {
+      max-height: 350px;
+    }
+    code {
+      white-space: inherit !important;
+    }
+  </style>
+</div>
+{{ footer }}

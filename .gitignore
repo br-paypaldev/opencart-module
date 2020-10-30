@@ -1,0 +1,36 @@
+# Log
+*.log
+
+# Cache
+*.cache
+
+# Maven
+target/
+dist/
+
+# JetBrains
+.idea/
+
+# MacOS
+.DS_Store
+
+# Windows
+Thumbs.db
+
+# Executáveis
+*.app
+*.exe
+*.war
+
+# Mídia
+*.mp4
+*.tiff
+*.avi
+*.flv
+*.mov
+*.wmv
+
+# Compactados
+*.zip
+*.rar
+*.tar.gz

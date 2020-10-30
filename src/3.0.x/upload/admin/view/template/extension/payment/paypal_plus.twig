@@ -1,0 +1,904 @@
+{{ header }}{{ column_left }}
+<div id="content">
+  <div class="page-header">
+    <div class="container-fluid">
+      <div class="pull-right">
+        <button type="submit" form="form-paypal-plus" data-toggle="tooltip" title="{{ button_save }}" class="btn btn-primary"><i class="fa fa-save"></i></button>
+        <a href="{{ cancel }}" data-toggle="tooltip" title="{{ button_cancel }}" class="btn btn-default"><i class="fa fa-reply"></i></a>
+      </div>
+      <h1>{{ heading_title }}</h1> <span class="badge">{{ version }}</span>
+      <ul class="breadcrumb">
+        {% for breadcrumb in breadcrumbs %}
+        <li><a href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a></li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+  <div class="container-fluid">
+    {% if requirements %}
+    <div class="alert alert-warning">
+      <h4><b>{{ text_requirements }}</b></h4>
+      {% for requirement in requirements %}
+      <p><i class="fa fa-exclamation-triangle"></i> {{ requirement }}</p>
+      {% endfor %}
+    </div>
+    {% endif %}
+    {% if error_warning %}
+    <div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> {{ error_warning }}
+      <button type="button" class="close" data-dismiss="alert">&times;</button>
+    </div>
+    {% endif %}
+    {% if success %}
+    <div class="alert alert-success"><i class="fa fa-check-circle"></i> {{ success }}
+      <button type="button" class="close" data-dismiss="alert">&times;</button>
+    </div>
+    {% endif %}
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title"><i class="fa fa-pencil"></i> {{ text_edit }}</h3>
+      </div>
+      <div class="panel-body">
+        <form action="{{ action }}" method="post" enctype="multipart/form-data" id="form-paypal-plus" class="form-horizontal">
+          <ul class="nav nav-tabs">
+            <li class="active"><a href="#tab-general" data-toggle="tab">{{ tab_general }}</a></li>
+            <li><a href="#tab-store" data-toggle="tab">{{ tab_store }}</a></li>
+            <li><a href="#tab-api" data-toggle="tab">{{ tab_api }}</a></li>
+            <li><a href="#tab-order-status" data-toggle="tab">{{ tab_order_status }}</a></li>
+            <li><a href="#tab-custom-field" data-toggle="tab">{{ tab_custom_field }}</a></li>
+            <li><a href="#tab-checkout" data-toggle="tab">{{ tab_checkout }}</a></li>
+            <li><a href="#tab-webhook" data-toggle="tab">{{ tab_webhook }}</a></li>
+          </ul>
+          <div class="tab-content">
+            <div class="tab-pane active" id="tab-general">
+              <div class="alert alert-info"><i class="fa fa-info-circle"></i> {{ info_general }}</div>
+              <div class="form-group">
+                <div class="col-sm-3">
+                  <h5><span class="text-danger">*</span> <strong>{{ entry_customer_groups }}</strong></h5>
+                  <span class="help"><i class="fa fa-info-circle"></i> {{ help_customer_groups }}</span>
+                </div>
+                <div class="col-sm-3">
+                  <div class="well well-sm" style="height: 150px; overflow: auto;">
+                    {% for customer_group in customer_groups_data %}
+                    <div class="checkbox">
+                      <label>
+                        {% if customer_group.customer_group_id in customer_groups %}
+                        <input type="checkbox" name="customer_groups[]" value="{{ customer_group.customer_group_id }}" checked="checked" />
+                        {{ customer_group['name'] }}
+                        {% else %}
+                        <input type="checkbox" name="customer_groups[]" value="{{ customer_group.customer_group_id }}" />
+                        {{ customer_group['name'] }}
+                        {% endif %}
+                      </label>
+                    </div>
+                    {% endfor %}
+                  </div>
+                  <a onclick="$(this).parent().find(':checkbox').prop('checked', true);">{{ text_select_all }}</a> / <a onclick="$(this).parent().find(':checkbox').prop('checked', false);">{{ text_unselect_all }}</a>
+                  {% if error_customer_groups %}
+                  <div class="text-danger">{{ error_customer_groups }}</div>
+                  {% endif %}
+                </div>
+              </div>
+              <div class="form-group">
+                <div class="col-sm-3">
+                  <h5><strong>{{ entry_total }}</strong></h5>
+                  <span class="help"><i class="fa fa-info-circle"></i> {{ help_total }}</span>
+                </div>
+                <div class="col-sm-3">
+                  <div class="input-group">
+                    <input type="text" name="total" value="{{ total }}" placeholder="" class="form-control" maxlength="6" />
+                    <div class="input-group-addon"><i class="fa fa-money"></i></div>
+                  </div>
+                </div>
+              </div>
+              <div class="form-group">
+                <div class="col-sm-3">
+                  <h5><strong>{{ entry_geo_zone }}</strong></h5>
+                </div>
+                <div class="col-sm-3">
+                  <select name="geo_zone_id" class="form-control">
+                    <option value="0">{{ text_all_zones }}</option>
+                    {% for geo_zone in geo_zones_data %}
+                    {% if geo_zone.geo_zone_id == geo_zone_id %}
+                    <option value="{{ geo_zone.geo_zone_id }}" selected="selected">{{ geo_zone.name }}</option>
+                    {% else %}
+                    <option value="{{ geo_zone.geo_zone_id }}">{{ geo_zone.name }}</option>
+                    {% endif %}
+                    {% endfor %}
+                  </select>
+                </div>
+              </div>
+              <div class="form-group">
+                <div class="col-sm-3">
+                  <h5><strong>{{ entry_status }}</strong></h5>
+                </div>
+                <div class="col-sm-3">
+                  <select name="status" class="form-control">
+                    {% if status %}
+                    <option value="1" selected="selected">{{ text_enabled }}</option>
+                    <option value="0">{{ text_disabled }}</option>
+                    {% else %}
+                    <option value="1">{{ text_enabled }}</option>
+                    <option value="0" selected="selected">{{ text_disabled }}</option>
+                    {% endif %}
+                  </select>
+                </div>
+              </div>
+              <div class="form-group">
+                <div class="col-sm-3">
+                  <h5><strong>{{ entry_sort_order }}</strong></h5>
+                </div>
+                <div class="col-sm-3">
+                  <input type="text" name="sort_order" value="{{ sort_order }}" placeholder="" class="form-control" maxlength="4" />
+                </div>
+              </div>
+            </div>
+            <div class="tab-pane" id="tab-store">
+              <div class="alert alert-info"><i class="fa fa-info-circle"></i> {{ info_store }}</div>
+              <div class="form-group">
+                <div class="col-sm-3">
+                  <h5><span class="text-danger">*</span> <strong>{{ entry_stores }}</strong></h5>
+                  <span class="help"><i class="fa fa-info-circle"></i> {{ help_stores }}</span>
+                </div>
+                <div class="col-sm-3">
+                  <div class="well well-sm" style="height: 150px; overflow: auto;">
+                    <div class="checkbox">
+                      <label>
+                        {% if 0 in stores %}
+                        <input type="checkbox" name="stores[]" value="0" checked="checked" />
+                        {{ default_store }}
+                        {% else %}
+                        <input type="checkbox" name="stores[]" value="0" />
+                        {{ default_store }}
+                        {% endif %}
+                      </label>
+                    </div>
+                    {% for store in stores_data %}
+                    <div class="checkbox">
+                      <label>
+                        {% if store.store_id in stores %}
+                        <input type="checkbox" name="stores[]" value="{{ store.store_id }}" checked="checked" />
+                        {{ store.name }}
+                        {% else %}
+                        <input type="checkbox" name="stores[]" value="{{ store.store_id }}" />
+                        {{ store.name }}
+                        {% endif %}
+                      </label>
+                    </div>
+                    {% endfor %}
+                  </div>
+                  <a onclick="$(this).parent().find(':checkbox').prop('checked', true);">{{ text_select_all }}</a> / <a onclick="$(this).parent().find(':checkbox').prop('checked', false);">{{ text_unselect_all }}</a>
+                  {% if error_stores %}
+                  <div class="text-danger">{{ error_stores }}</div>
+                  {% endif %}
+                </div>
+              </div>
+              <fieldset>
+                <legend><strong>{{ text_prefix }}</strong></legend>
+                <div class="table-responsive">
+                  <table class="table table-bordered table-hover">
+                    <thead>
+                      <tr>
+                        <td class="text-left col-sm-3">{{ entry_store }}</td>
+                        <td class="text-left col-sm-9"><span class="help"><i class="fa fa-info-circle"></i> {{ help_prefix }}</span></td>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td class="text-left">
+                          <span class="text-danger" id="required-prefix-0">{% if 0 in stores %} * {% endif %}</span> {{ default_store }} {{ text_default }}
+                        </td>
+                        <td class="text-left">
+                          <input type="text" name="prefix[0]" value="{{ new_prefix[0] }}" placeholder="" id="store-prefix-0" class="form-control" maxlength="8" />
+                          {% if error_prefix[0] is defined %}
+                          <div class="text-danger">{{ error_prefix[0] }}</div>
+                          {% endif %}
+                        </td>
+                      </tr>
+                      {% for store in stores_data %}
+                      <tr>
+                        <td class="text-left"><span class="text-danger" id="required-prefix-{{ store.store_id }}">{% if store.store_id in stores %} * {% endif %}</span> {{ store.name }}</td>
+                        <td class="text-left">
+                          <input type="text" name="prefix[{{ store.store_id }}]" value="{{ new_prefix[store.store_id] }}" placeholder="" {% if store.store_id in stores %} required {% endif %} id="store-prefix-{{ store.store_id }}" class="form-control" maxlength="8" />
+                          {% if error_prefix[store.store_id] is defined %}
+                          <div class="text-danger">{{ error_prefix[store.store_id] }}</div>
+                          {% endif %}
+                        </td>
+                      </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+              </fieldset>
+            </div>
+            <div class="tab-pane" id="tab-api">
+              <div class="alert alert-info"><i class="fa fa-info-circle"></i> {{ info_api }}</div>
+              <div class="form-group">
+                <div class="col-sm-3">
+                  <h5><span class="text-danger">*</span> <strong>{{ entry_client_id }}</strong></h5>
+                  <span class="help"><i class="fa fa-info-circle"></i> {{ help_client_id }}</span>
+                </div>
+                <div class="col-sm-8">
+                  <div class="input-group">
+                    <span class="input-group-addon"><i class="fa fa-plug"></i></span>
+                    <input type="text" name="client_id" value="{{ client_id }}" placeholder="" class="form-control" maxlength="200" />
+                  </div>
+                  {% if error_client_id %}
+                  <div class="text-danger">{{ error_client_id }}</div>
+                  {% endif %}
+                </div>
+              </div>
+              <div class="form-group">
+                <div class="col-sm-3">
+                  <h5><span class="text-danger">*</span> <strong>{{ entry_client_secret }}</strong></h5>
+                  <span class="help"><i class="fa fa-info-circle"></i> {{ help_client_secret }}</span>
+                </div>
+                <div class="col-sm-8">
+                  <div class="input-group">
+                    <span class="input-group-addon"><i class="fa fa-plug"></i></span>
+                    <input type="text" name="client_secret" value="{{ client_secret }}" placeholder="" class="form-control" maxlength="200" />
+                  </div>
+                  {% if error_client_secret %}
+                  <div class="text-danger">{{ error_client_secret }}</div>
+                  {% endif %}
+                </div>
+              </div>
+              <div class="form-group">
+                <div class="col-sm-3">
+                  <h5><strong>{{ entry_sandbox }}</strong></h5>
+                  <span class="help"><i class="fa fa-info-circle"></i> {{ help_sandbox }}</span>
+                </div>
+                <div class="col-sm-8">
+                  <select name="sandbox" class="form-control">
+                    {% if sandbox %}
+                    <option value="1" selected="selected">{{ text_yes }}</option>
+                    <option value="0">{{ text_no }}</option>
+                    {% else %}
+                    <option value="1">{{ text_yes }}</option>
+                    <option value="0" selected="selected">{{ text_no }}</option>
+                    {% endif %}
+                  </select>
+                </div>
+              </div>
+              <div class="form-group">
+                <div class="col-sm-3">
+                  <h5><strong>{{ entry_debug }}</strong></h5>
+                  <span class="help"><i class="fa fa-info-circle"></i> {{ help_debug }}</span>
+                </div>
+                <div class="col-sm-8">
+                  <select name="debug" class="form-control">
+                    {% if debug %}
+                    <option value="1" selected="selected">{{ text_yes }}</option>
+                    <option value="0">{{ text_no }}</option>
+                    {% else %}
+                    <option value="1">{{ text_yes }}</option>
+                    <option value="0" selected="selected">{{ text_no }}</option>
+                    {% endif %}
+                  </select>
+                </div>
+              </div>
+              <div class="form-group">
+                <div class="col-sm-3">
+                  <h5><strong>{{ entry_description }}</strong></h5>
+                  <span class="help"><i class="fa fa-info-circle"></i> {{ help_description }}</span>
+                </div>
+                <div class="col-sm-8">
+                  <div class="input-group">
+                    <span class="input-group-addon"><i class="fa fa-edit"></i></span>
+                    <input type="text" name="description" value="{{ description }}" placeholder="" class="form-control" />
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="tab-pane" id="tab-order-status">
+              <div class="alert alert-info"><i class="fa fa-info-circle"></i> {{ info_order_status }}</div>
+              <div class="form-group">
+                <div class="col-sm-3">
+                  <h5><strong>{{ entry_order_status_pending }}</strong></h5>
+                  <span class="help"><i class="fa fa-info-circle"></i> {{ help_order_status_pending }}</span>
+                </div>
+                <div class="col-sm-3">
+                  <select name="order_status_pending_id" class="form-control">
+                    {% for order_status in order_statuses_data %}
+                    {% if order_status.order_status_id == order_status_pending_id %}
+                    <option value="{{ order_status.order_status_id }}" selected="selected">{{ order_status.name }}</option>
+                    {% else %}
+                    <option value="{{ order_status.order_status_id }}">{{ order_status.name }}</option>
+                    {% endif %}
+                    {% endfor %}
+                  </select>
+                </div>
+              </div>
+              <div class="form-group">
+                <div class="col-sm-3">
+                  <h5><strong>{{ entry_order_status_denied }}</strong></h5>
+                  <span class="help"><i class="fa fa-info-circle"></i> {{ help_order_status_denied }}</span>
+                </div>
+                <div class="col-sm-3">
+                  <select name="order_status_denied_id" class="form-control">
+                    {% for order_status in order_statuses_data %}
+                    {% if order_status.order_status_id == order_status_denied_id %}
+                    <option value="{{ order_status.order_status_id }}" selected="selected">{{ order_status.name }}</option>
+                    {% else %}
+                    <option value="{{ order_status.order_status_id }}">{{ order_status.name }}</option>
+                    {% endif %}
+                    {% endfor %}
+                  </select>
+                </div>
+              </div>
+              <div class="form-group">
+                <div class="col-sm-3">
+                  <h5><strong>{{ entry_order_status_analyze }}</strong></h5>
+                  <span class="help"><i class="fa fa-info-circle"></i> {{ help_order_status_analyze }}</span>
+                </div>
+                <div class="col-sm-3">
+                  <select name="order_status_analyze_id" class="form-control">
+                    {% for order_status in order_statuses_data %}
+                    {% if order_status.order_status_id == order_status_analyze_id %}
+                    <option value="{{ order_status.order_status_id }}" selected="selected">{{ order_status.name }}</option>
+                    {% else %}
+                    <option value="{{ order_status.order_status_id }}">{{ order_status.name }}</option>
+                    {% endif %}
+                    {% endfor %}
+                  </select>
+                </div>
+              </div>
+              <div class="form-group">
+                <div class="col-sm-3">
+                  <h5><strong>{{ entry_order_status_completed }}</strong></h5>
+                  <span class="help"><i class="fa fa-info-circle"></i> {{ help_order_status_completed }}</span>
+                </div>
+                <div class="col-sm-3">
+                  <select name="order_status_completed_id" class="form-control">
+                    {% for order_status in order_statuses_data %}
+                    {% if order_status.order_status_id == order_status_completed_id %}
+                    <option value="{{ order_status.order_status_id }}" selected="selected">{{ order_status.name }}</option>
+                    {% else %}
+                    <option value="{{ order_status.order_status_id }}">{{ order_status.name }}</option>
+                    {% endif %}
+                    {% endfor %}
+                  </select>
+                </div>
+              </div>
+              <div class="form-group">
+                <div class="col-sm-3">
+                  <h5><strong>{{ entry_order_status_refunded }}</strong></h5>
+                  <span class="help"><i class="fa fa-info-circle"></i> {{ help_order_status_refunded }}</span>
+                </div>
+                <div class="col-sm-3">
+                  <select name="order_status_refunded_id" class="form-control">
+                    {% for order_status in order_statuses_data %}
+                    {% if order_status.order_status_id == order_status_refunded_id %}
+                    <option value="{{ order_status.order_status_id }}" selected="selected">{{ order_status.name }}</option>
+                    {% else %}
+                    <option value="{{ order_status.order_status_id }}">{{ order_status.name }}</option>
+                    {% endif %}
+                    {% endfor %}
+                  </select>
+                </div>
+              </div>
+              <div class="form-group">
+                <div class="col-sm-3">
+                  <h5><strong>{{ entry_order_status_dispute }}</strong></h5>
+                  <span class="help"><i class="fa fa-info-circle"></i> {{ help_order_status_dispute }}</span>
+                </div>
+                <div class="col-sm-3">
+                  <select name="order_status_dispute_id" class="form-control">
+                    {% for order_status in order_statuses_data %}
+                    {% if order_status.order_status_id == order_status_dispute_id %}
+                    <option value="{{ order_status.order_status_id }}" selected="selected">{{ order_status.name }}</option>
+                    {% else %}
+                    <option value="{{ order_status.order_status_id }}">{{ order_status.name }}</option>
+                    {% endif %}
+                    {% endfor %}
+                  </select>
+                </div>
+              </div>
+              <div class="form-group">
+                <div class="col-sm-3">
+                  <h5><strong>{{ entry_order_status_reversed }}</strong></h5>
+                  <span class="help"><i class="fa fa-info-circle"></i> {{ help_order_status_reversed }}</span>
+                </div>
+                <div class="col-sm-3">
+                  <select name="order_status_reversed_id" class="form-control">
+                   {% for order_status in order_statuses_data %}
+                    {% if order_status.order_status_id == order_status_reversed_id %}
+                    <option value="{{ order_status.order_status_id }}" selected="selected">{{ order_status.name }}</option>
+                    {% else %}
+                    <option value="{{ order_status.order_status_id }}">{{ order_status.name }}</option>
+                    {% endif %}
+                    {% endfor %}
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div class="tab-pane" id="tab-custom-field">
+              <div class="alert alert-info"><i class="fa fa-info-circle"></i> {{ info_custom_field }}</div>
+              <div class="form-group">
+                <div class="col-sm-3">
+                  <h5><strong>{{ entry_custom_document_id }}</strong></h5>
+                  <span class="help"><i class="fa fa-info-circle"></i> {{ help_custom_document_id }}</span>
+                </div>
+                <div class="col-sm-3">
+                  <label>{{ text_field }}</label>
+                  <select name="custom_document_id" class="form-control">
+                    <option value="">{{ text_none }}</option>
+                    {% if custom_document_id == 'C' %}
+                    <option value="C" selected="selected">{{ text_column }}</option>
+                    {% else %}
+                    <option value="C">{{ text_column }}</option>
+                    {% endif %}
+                    {% for custom_field in custom_fields_data %}
+                    {% if custom_field.location == 'account' %}
+                    {% if custom_field.type == 'text' %}
+                    {% if custom_field.custom_field_id == custom_document_id %}
+                    <option value="{{ custom_field.custom_field_id }}" selected="selected">{{ custom_field.name }}</option>
+                    {% else %}
+                    <option value="{{ custom_field.custom_field_id }}">{{ custom_field.name }}</option>
+                    {% endif %}
+                    {% endif %}
+                    {% endif %}
+                    {% endfor %}
+                  </select>
+                </div>
+                <div class="col-sm-3" id="document_column">
+                  <label>{{ text_document }}</label>
+                  <select name="document_column" class="form-control">
+                    <option value=""></option>
+                    {% for column in columns_data %}
+                    {% if column.Field == document_column %}
+                    <option value="{{ column.Field }}" selected="selected">{{ column.Field }}</option>
+                    {% else %}
+                    <option value="{{ column.Field }}">{{ column.Field }}</option>
+                    {% endif %}
+                    {% endfor %}
+                  </select>
+                  {% if error_document %}
+                  <div class="text-danger">{{ error_document }}</div>
+                  {% endif %}
+                </div>
+              </div>
+              <div class="form-group">
+                <div class="col-sm-3">
+                  <h5><strong>{{ entry_custom_number_id }}</strong></h5>
+                  <span class="help"><i class="fa fa-info-circle"></i> {{ help_custom_number_id }}</span>
+                </div>
+                <div class="col-sm-3">
+                  <label>{{ text_field }}</label>
+                  <select name="custom_number_id" class="form-control">
+                    <option value="">{{ text_none }}</option>
+                    {% if custom_number_id == 'C' %}
+                    <option value="C" selected="selected">{{ text_column }}</option>
+                    {% else %}
+                    <option value="C">{{ text_column }}</option>
+                    {% endif %}
+                    {% for custom_field in custom_fields_data %}
+                    {% if custom_field.location == 'address' %}
+                    {% if custom_field.type == 'text' %}
+                    {% if custom_field.custom_field_id == custom_number_id %}
+                    <option value="{{ custom_field.custom_field_id }}" selected="selected">{{ custom_field.name }}</option>
+                    {% else %}
+                    <option value="{{ custom_field.custom_field_id }}">{{ custom_field.name }}</option>
+                    {% endif %}
+                    {% endif %}
+                    {% endif %}
+                    {% endfor %}
+                  </select>
+                </div>
+                <div class="col-sm-3" id="number_payment_column">
+                  <label>{{ text_number_payment }}</label>
+                  <select name="number_payment_column" class="form-control">
+                    <option value=""></option>
+                    {% for column in columns_data %}
+                    {% if column.Field == number_payment_column %}
+                    <option value="{{ column.Field }}" selected="selected">{{ column.Field }}</option>
+                    {% else %}
+                    <option value="{{ column.Field }}">{{ column.Field }}</option>
+                    {% endif %}
+                    {% endfor %}
+                  </select>
+                  {% if error_number_payment %}
+                  <div class="text-danger">{{ error_number_payment }}</div>
+                  {% endif %}
+                </div>
+                <div class="col-sm-3" id="number_shipping_column">
+                  <label>{{ text_number_shipping }}</label>
+                  <select name="number_shipping_column" class="form-control">
+                    <option value=""></option>
+                    {% for column in columns_data %}
+                    {% if column.Field == number_shipping_column %}
+                    <option value="{{ column.Field }}" selected="selected">{{ column.Field }}</option>
+                    {% else %}
+                    <option value="{{ column.Field }}">{{ column.Field }}</option>
+                    {% endif %}
+                    {% endfor %}
+                  </select>
+                  {% if error_number_shipping %}
+                  <div class="text-danger">{{ error_number_shipping }}</div>
+                  {% endif %}
+                </div>
+              </div>
+              <div class="form-group">
+                <div class="col-sm-3">
+                  <h5><strong>{{ entry_custom_complement_id }}</strong></h5>
+                  <span class="help"><i class="fa fa-info-circle"></i> {{ help_custom_complement_id }}</span>
+                </div>
+                <div class="col-sm-3">
+                  <label>{{ text_field }}</label>
+                  <select name="custom_complement_id" class="form-control">
+                    <option value="">{{ text_none }}</option>
+                    {% if custom_complement_id == 'C' %}
+                    <option value="C" selected="selected">{{ text_column }}</option>
+                    {% else %}
+                    <option value="C">{{ text_column }}</option>
+                    {% endif %}
+                    {% for custom_field in custom_fields_data %}
+                    {% if custom_field.location == 'address' %}
+                    {% if custom_field.type == 'text' %}
+                    {% if custom_field.custom_field_id == custom_complement_id %}
+                    <option value="{{ custom_field.custom_field_id }}" selected="selected">{{ custom_field.name }}</option>
+                    {% else %}
+                    <option value="{{ custom_field.custom_field_id }}">{{ custom_field.name }}</option>
+                    {% endif %}
+                    {% endif %}
+                    {% endif %}
+                    {% endfor %}
+                  </select>
+                </div>
+                <div class="col-sm-3" id="complement_payment_column">
+                  <label>{{ text_complement_payment }}</label>
+                  <select name="complement_payment_column" class="form-control">
+                    <option value=""></option>
+                    {% for column in columns_data %}
+                    {% if column.Field == complement_payment_column %}
+                    <option value="{{ column.Field }}" selected="selected">{{ column.Field }}</option>
+                    {% else %}
+                    <option value="{{ column.Field }}">{{ column.Field }}</option>
+                    {% endif %}
+                    {% endfor %}
+                  </select>
+                  {% if error_complement_payment %}
+                  <div class="text-danger">{{ error_complement_payment }}</div>
+                  {% endif %}
+                </div>
+                <div class="col-sm-3" id="complement_shipping_column">
+                  <label>{{ text_complement_shipping }}</label>
+                  <select name="complement_shipping_column" class="form-control">
+                    <option value=""></option>
+                    {% for column in columns_data %}
+                    {% if column.Field == complement_shipping_column %}
+                    <option value="{{ column.Field }}" selected="selected">{{ column.Field }}</option>
+                    {% else %}
+                    <option value="{{ column.Field }}">{{ column.Field }}</option>
+                    {% endif %}
+                    {% endfor %}
+                  </select>
+                  {% if error_complement_shipping %}
+                  <div class="text-danger">{{ error_complement_shipping }}</div>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+            <div class="tab-pane" id="tab-checkout">
+              <div class="alert alert-info"><i class="fa fa-info-circle"></i> {{ info_checkout }}</div>
+              <div class="form-group">
+                <div class="col-sm-3">
+                  <h5><span class="text-danger">*</span> <strong>{{ entry_extension_title }}</strong></h5>
+                  <span class="help"><i class="fa fa-info-circle"></i> {{ help_extension_title }}</span>
+                </div>
+                <div class="col-sm-3">
+                  <div class="input-group">
+                    <span class="input-group-addon"><i class="fa fa-edit"></i></span>
+                    <input type="text" name="extension_title" value="{{ extension_title }}" placeholder="" class="form-control" maxlength="50" />
+                  </div>
+                  {% if error_extension_title %}
+                  <div class="text-danger">{{ error_extension_title }}</div>
+                  {% endif %}
+                </div>
+              </div>
+              <div class="form-group">
+                <div class="col-sm-3">
+                  <h5><strong>{{ entry_information }}</strong></h5>
+                  <span class="help"><i class="fa fa-info-circle"></i> {{ help_information }}</span>
+                </div>
+                <div class="col-sm-3">
+                  <select name="information_id" class="form-control">
+                    <option value="0">{{ text_none }}</option>
+                    {% for information in informations %}
+                    {% if information.information_id == information_id %}
+                    <option value="{{ information.information_id }}" selected="selected">{{ information.title }}</option>
+                    {% else %}
+                    <option value="{{ information.information_id }}">{{ information.title }}</option>
+                    {% endif %}
+                    {% endfor %}
+                  </select>
+                </div>
+              </div>
+              <div class="form-group">
+                <div class="col-sm-3">
+                  <h5><strong>{{ entry_button_style }}</strong></h5>
+                  <span class="help"><i class="fa fa-info-circle"></i> {{ help_button_style }}</span>
+                </div>
+                <div class="col-sm-3">
+                  <select name="button_style" class="form-control">
+                    {% for key, value in styles %}
+                    {% if key == button_style %}
+                    <option value="{{ key }}" selected="selected">{{ value }}</option>
+                    {% else %}
+                    <option value="{{ key }}">{{ value }}</option>
+                    {% endif %}
+                    {% endfor %}
+                  </select>
+                </div>
+              </div>
+              <div class="form-group">
+                <div class="col-sm-3">
+                  <h5><span class="text-danger">*</span> <strong>{{ entry_button_text }}</strong></h5>
+                  <span class="help"><i class="fa fa-info-circle"></i> {{ help_button_text }}</span>
+                </div>
+                <div class="col-sm-3">
+                  <div class="input-group">
+                    <span class="input-group-addon"><i class="fa fa-check"></i></span>
+                    <input type="text" name="button_text" value="{{ button_text }}" placeholder="" class="form-control" maxlength="50" />
+                  </div>
+                  {% if error_button_text %}
+                  <div class="text-danger">{{ error_button_text }}</div>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+            <div class="tab-pane" id="tab-webhook">
+              <div id="progress"></div>
+              <div class="alert alert-info"><i class="fa fa-info-circle"></i> {{ info_webhook }}</div>
+              {% if not hide_webhook %}
+              <input type="hidden" name="webhook_id" id="webhook_id" value="" />
+              <div class="table-responsive">
+                <div id="add-webhook" style="height: 200px !important; vertical-align: middle;">
+                  <button type="button" class="btn btn-primary btn-lg btn-block" onclick="addWebhook();">{{ text_webhook_new }}</button>
+                </div>
+                <table id="table-my-webhooks" style="min-width:100% !important;" class="table table-bordered table-hover">
+                  <thead>
+                    <tr>
+                      <th style="min-width: 140px !important;" class="text-center">{{ column_webhook_id }}</th>
+                      <th style="min-width: 400px !important;" class="text-left">{{ column_webhook_url }}</th>
+                      <th style="min-width: 50px !important;" class="text-center">{{ column_webhook_actions }}</th>
+                    </tr>
+                  </thead>
+                </table>
+                <table id="table-webhooks-events" style="min-width:100% !important;" class="table table-bordered table-hover">
+                  <thead>
+                    <tr>
+                      <th style="width: 1px;" class="text-center"><input type="checkbox" onclick="$('.editor-active[type=checkbox]').prop('checked', this.checked);" /></th>
+                      <th style="min-width: 120px !important;" class="text-left">{{ column_name }}</th>
+                      <th style="min-width: 400px !important;" class="text-left">{{ column_description }}</th>
+                      <th style="min-width: 20px !important;" class="text-center">{{ column_status }}</th>
+                    </tr>
+                  </thead>
+                </table>
+                <button type="button" id="btn-send" class="btn btn-primary btn-lg btn-block">{{ text_webhook_save }}</button>
+              </div>
+              {% endif %}
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
+  <script type="text/javascript"><!--
+    $(document).ready(function() {
+      $('#add-webhook, #table-my-webhooks, #table-webhooks-events, #btn-send').hide();
+      loadWebhooks();
+    });
+
+    function loadWebhooks() {
+      $('#table-my-webhooks').DataTable().destroy();
+      $.ajax({
+        url: 'index.php?route=extension/payment/paypal_plus/listWebhooks&user_token={{ user_token }}', dataType: 'json',
+        beforeSend: function() {
+          $('#progress').html('<div class="alert alert-warning"><i class="fa fa-spinner fa-spin"></i> {{ text_webhook_loading }}<button type="button" class="close" data-dismiss="alert">&times;</button></div>');
+        },
+        complete: function() {
+          $('#progress').html('');
+        },
+        success: function(jsonData) {
+          if (jsonData.empty) {
+            $('#table-my-webhooks').DataTable().destroy();
+            $('#table-my-webhooks').hide();
+            $('#add-webhook').show();
+          }
+          else if (jsonData.error) {
+            $('html, body').animate({ scrollTop: 0 }, 'slow');
+            $('#progress').html('<div class="alert alert-warning"><i class="fa fa-spinner fa-spin"></i> ' + jsonData.error + '<button type="button" class="close" data-dismiss="alert">&times;</button></div>');
+          } else {
+            if (jsonData.webhook_id) {
+              $('#webhook_id').val(jsonData.webhook_id);
+            }
+            $('#table-my-webhooks').show();
+            $('#add-webhook').hide();
+            $('#table-my-webhooks').DataTable({
+              "order": [],
+              "columnDefs": [
+                {
+                  "targets": 0,
+                  "className": "text-center"
+                },
+                {
+                  "targets": 2,
+                  "searchable": false,
+                  "orderable": false
+                }
+              ],
+              "data": jsonData.data,
+              "language": {
+                "url": "//cdn.datatables.net/plug-ins/1.10.21/i18n/Portuguese-Brasil.json"
+              }
+            });
+          }
+        }
+      });
+    }
+
+    function addWebhook() {
+      $.ajax({
+        url: 'index.php?route=extension/payment/paypal_plus/listWebhooksEventTypes&user_token={{ user_token }}', dataType: 'json',
+        beforeSend: function() {
+          $(this).prop('disabled', true);
+          $('#add-webhook').hide();
+          $('html, body').animate({ scrollTop: 0 }, 'slow');
+          $('#progress').html('<div class="alert alert-warning"><i class="fa fa-spinner fa-spin"></i> {{ text_webhook_add }}<button type="button" class="close" data-dismiss="alert">&times;</button></div>');
+        },
+        complete: function() {
+          $(this).prop('disabled', false);
+          $('#progress').html('');
+        },
+        success: function(jsonData) {
+          if (jsonData.error) {
+            $('#add-webhook').show();
+            $('#progress').html('<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> ' + jsonData.error + ' <button type="button" class="close" data-dismiss="alert">&times;</button></div>');
+          } else {
+            $('#table-webhooks-events, #btn-send').show();
+            $('#table-webhooks-events').DataTable({
+              "order": [],
+              "pageLength": 100,
+              "columnDefs": [
+                {
+                  "targets": [ 0, 3 ],
+                  "className": "text-center"
+                },
+                {
+                  "targets": 0,
+                  "searchable": false,
+                  "orderable": false
+                }
+              ],
+              "data": jsonData.data,
+              "language": {
+                "url": "//cdn.datatables.net/plug-ins/1.10.21/i18n/Portuguese-Brasil.json"
+              }
+            });
+          }
+        }
+      });
+    }
+
+    $("#btn-send").click(function() {
+      var webhooks = new Array();
+      $(".editor-active[type=checkbox]:checked").each(function() {
+        webhooks.push({'name': $(this).attr("value")});
+      });
+
+      if (webhooks.length > 0) {
+        $.ajax({
+          url: 'index.php?route=extension/payment/paypal_plus/addwebhooks&user_token={{ user_token }}',
+          dataType: 'json',
+          method: 'POST',
+          data: {'event_types': webhooks},
+          beforeSend: function() {
+            $(this).prop('disabled', true);
+            $('#table-webhooks-events, #btn-send').hide();
+            $('html, body').animate({ scrollTop: 0 }, 'slow');
+            $('#progress').html('<div class="alert alert-warning"><i class="fa fa-spinner fa-spin"></i> {{ text_webhook_saving }}<button type="button" class="close" data-dismiss="alert">&times;</button></div>');
+          },
+          complete: function() {
+            $(this).prop('disabled', false);
+          },
+          success: function(jsonData) {
+            if (jsonData.error) {
+              $('#table-webhooks-events, #btn-send').show();
+              $('#progress').html('<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> ' + jsonData.error + ' <button type="button" class="close" data-dismiss="alert">&times;</button></div>');
+            } else {
+              $('#table-webhooks-events').DataTable().destroy();
+              $('#progress').html('<div class="alert alert-success"><i class="fa fa-exclamation-circle"></i> ' + jsonData.success + ' <button type="button" class="close" data-dismiss="alert">&times;</button></div>');
+              loadWebhooks();
+            }
+          }
+        });
+      } else {
+        $('html, body').animate({ scrollTop: 0 }, 'slow');
+        $('#progress').html('<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> {{ error_webhook_empty }}<button type="button" class="close" data-dismiss="alert">&times;</button></div>');
+      }
+    });
+
+    function deleteWebhook(id) {
+      if (confirm('{{ text_webhook_confirm }}')) {
+        $.ajax({
+          url: 'index.php?route=extension/payment/paypal_plus/deletewebhook&user_token={{ user_token }}',
+          dataType: 'json',
+          method: 'POST',
+          data: { webhook_id: id },
+          beforeSend: function() {
+            $('#del-' + id).prop('disabled', true);
+            $('#table-my-webhooks').hide();
+            $('html, body').animate({ scrollTop: 0 }, 'slow');
+            $('#progress').html('<div class="alert alert-warning"><i class="fa fa-spinner fa-spin"></i> {{ text_webhook_deleting }}<button type="button" class="close" data-dismiss="alert">&times;</button></div>');
+          },
+          complete: function() {
+            $('#del-' + id).prop('disabled', false);
+          },
+          success: function(jsonData) {
+            if (jsonData.error) {
+              $('#table-my-webhooks').show();
+              $('#progress').html('<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> ' + jsonData.error + '<button type="button" class="close" data-dismiss="alert">&times;</button></div>');
+            } else {
+              $('#progress').html('<div class="alert alert-success"><i class="fa fa-exclamation-circle"></i> ' + jsonData.success + ' <button type="button" class="close" data-dismiss="alert">&times;</button></div>');
+              loadWebhooks();
+            }
+          }
+        });
+      }
+    };
+
+    $('input[name=total][type=text]').mask("###0.00", {reverse: true});
+
+    $('input[name=sort_order][type=text]').on('keyup change', function() {
+      const value = $(this).val().replace(/[^0-9]/g,'');
+      $(this).val(value);
+    });
+
+    $('input[name^=prefix][type=text]').on('keyup change', function() {
+      const value = $(this).val().toUpperCase().replace(/[^A-Z0-9]/g,'');
+      $(this).val(value);
+    });
+
+    $('input[name=description][type=text]').on('keyup change', function() {
+      const value = $(this).val().replace(/[^A-Za-z0-9 ]/g,'');
+      $(this).val(value);
+    });
+
+    $('#document_column').hide();
+    $('#number_shipping_column').hide();
+    $('#number_payment_column').hide();
+    $('#complement_shipping_column').hide();
+    $('#complement_payment_column').hide();
+
+    $('select[name="custom_document_id"]').change(function() {
+      if ($(this).val() == 'C') { $('#document_column').show(); } else { $('#document_column').hide(); }
+    });
+    $('select[name="custom_number_id"]').change(function() {
+      if ($(this).val() == 'C') { $('#number_payment_column').show(); } else { $('#number_payment_column').hide(); }
+      if ($(this).val() == 'C') { $('#number_shipping_column').show(); } else { $('#number_shipping_column').hide(); }
+    });
+    $('select[name="custom_complement_id"]').change(function() {
+      if ($(this).val() == 'C') { $('#complement_payment_column').show(); } else { $('#complement_payment_column').hide(); }
+      if ($(this).val() == 'C') { $('#complement_shipping_column').show(); } else { $('#complement_shipping_column').hide(); }
+    });
+
+    $('select[name="custom_document_id"]').trigger('change');
+    $('select[name="custom_number_id"]').trigger('change');
+    $('select[name="custom_complement_id"]').trigger('change');
+
+    $('input[name="stores[]"]').change(function() {
+      let store = '#required-prefix-' + $(this).val();
+      let prefix = '#store-prefix-' + $(this).val();
+
+      if ($(this).prop('checked') == true) {
+        $(store).html('*');
+        $(prefix).attr("required", true);
+      } else {
+        $(store).html('');
+        $(prefix).attr("required", false);
+      }
+    });
+  //--></script>
+</div>
+{{ footer }}
