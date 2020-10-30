@@ -6,7 +6,6 @@
 
 # Maven
 target/
-dist/
 
 # JetBrains
 .idea/
