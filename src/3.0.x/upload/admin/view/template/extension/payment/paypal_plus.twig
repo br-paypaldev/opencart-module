@@ -261,6 +261,23 @@
               </div>
               <div class="form-group">
                 <div class="col-sm-3">
+                  <h5><strong>{{ entry_save_card }}</strong></h5>
+                  <span class="help"><i class="fa fa-info-circle"></i> {{ help_save_card }}</span>
+                </div>
+                <div class="col-sm-8">
+                  <select name="save_card" class="form-control">
+                    {% if save_card %}
+                    <option value="1" selected="selected">{{ text_yes }}</option>
+                    <option value="0">{{ text_no }}</option>
+                    {% else %}
+                    <option value="1">{{ text_yes }}</option>
+                    <option value="0" selected="selected">{{ text_no }}</option>
+                    {% endif %}
+                  </select>
+                </div>
+              </div>
+              <div class="form-group">
+                <div class="col-sm-3">
                   <h5><strong>{{ entry_debug }}</strong></h5>
                   <span class="help"><i class="fa fa-info-circle"></i> {{ help_debug }}</span>
                 </div>

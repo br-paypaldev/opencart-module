@@ -16,12 +16,24 @@ class ModelPaymentPayPalPlus extends Model {
                 `date_added` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
             ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
         ");
+
+        $this->db->query("
+            CREATE TABLE IF NOT EXISTS `" . DB_PREFIX . "customer_paypal_plus` (
+                `customer_paypal_plus_id` INT(11) PRIMARY KEY NOT NULL AUTO_INCREMENT,
+                `customer_id` INT(11) NULL,
+                `card_id` text,
+                `date_added` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+            ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+        ");
     }
 
     public function update() {
         $this->install();
 
-        $fields = array(
+        $fields = array();
+        $table = array();
+
+        $fields[] = array(
             'order_paypal_plus_id' => 'int(11)',
             'order_id' => 'int(11)',
             'payment_id' => 'varchar(35)',
@@ -34,40 +46,52 @@ class ModelPaymentPayPalPlus extends Model {
             'json' => 'text',
             'date_added' => 'DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP'
         );
+        $fields[] = array(
+            'customer_paypal_plus_id' => 'int(11)',
+            'customer_id' => 'int(11)',
+            'card_id' => 'text',
+            'date_added' => 'DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP'
+        );
 
-        $table = DB_PREFIX . "order_paypal_plus";
+        $table[] = "order_paypal_plus";
+        $table[] = "customer_paypal_plus";
 
-        $field_query = $this->db->query("SHOW COLUMNS FROM `" . $table . "`");
-        foreach ($field_query->rows as $field) {
-            $field_data[$field['Field']] = $field['Type'];
-        }
+        for ($i=0; $i < count($fields); $i++) {
+            $field_data = array();
 
-        foreach ($field_data as $key => $value) {
-            if (!array_key_exists($key, $fields)) {
-                $this->db->query("ALTER TABLE `" . $table . "` DROP COLUMN `" . $key . "`");
+            $field_query = $this->db->query("SHOW COLUMNS FROM `" . DB_PREFIX . $table[$i] . "`");
+            foreach ($field_query->rows as $field) {
+                $field_data[$field['Field']] = $field['Type'];
             }
-        }
 
-        $this->session->data['after_column'] = 'order_paypal_plus_id';
-        foreach ($fields as $key => $value) {
-            if (!array_key_exists($key, $field_data)) {
-                $this->db->query("ALTER TABLE `" . $table . "` ADD `" . $key . "` " . $value . " AFTER `" . $this->session->data['after_column'] . "`");
+            foreach ($field_data as $key => $value) {
+                if (!array_key_exists($key, $fields[$i])) {
+                    $this->db->query("ALTER TABLE `" . DB_PREFIX  . $table[$i] . "` DROP COLUMN `" . $key . "`");
+                }
             }
-            $this->session->data['after_column'] = $key;
-        }
-        unset($this->session->data['after_column']);
 
-        foreach ($fields as $key => $value) {
-            if ($key == 'order_paypal_plus_id') {
-                $this->db->query("ALTER TABLE `" . $table . "` CHANGE COLUMN `" . $key . "` `" . $key . "` " . $value . " NOT NULL AUTO_INCREMENT");
-            } else {
-                $this->db->query("ALTER TABLE `" . $table . "` CHANGE COLUMN `" . $key . "` `" . $key . "` " . $value);
+            $this->session->data['after_column'] = $table[$i] . '_id';
+            foreach ($fields[$i] as $key => $value) {
+                if (!array_key_exists($key, $field_data)) {
+                    $this->db->query("ALTER TABLE `" . DB_PREFIX . $table[$i] . "` ADD `" . $key . "` " . $value . " AFTER `" . $this->session->data['after_column'] . "`");
+                }
+                $this->session->data['after_column'] = $key;
+            }
+            unset($this->session->data['after_column']);
+
+            foreach ($fields[$i] as $key => $value) {
+                if ($key == $table[$i] . '_id') {
+                    $this->db->query("ALTER TABLE `" . DB_PREFIX . $table[$i] . "` CHANGE COLUMN `" . $key . "` `" . $key . "` " . $value . " NOT NULL AUTO_INCREMENT");
+                } else {
+                    $this->db->query("ALTER TABLE `" . DB_PREFIX . $table[$i] . "` CHANGE COLUMN `" . $key . "` `" . $key . "` " . $value);
+                }
             }
         }
     }
 
     public function uninstall() {
         $this->db->query("DROP TABLE IF EXISTS `" . DB_PREFIX . "order_paypal_plus`;");
+        $this->db->query("DROP TABLE IF EXISTS `" . DB_PREFIX . "customer_paypal_plus`;");
     }
 
     public function getColumns() {

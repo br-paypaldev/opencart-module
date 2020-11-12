@@ -112,6 +112,7 @@ class ControllerPaymentPayPalPlus extends Controller {
             'client_secret' => '',
             'sandbox' => '',
             'debug' => '',
+            'save_card' => '',
             'description' => '',
             'extension_discount' => '',
             'order_status_pending_id' => '',
@@ -259,6 +260,8 @@ class ControllerPaymentPayPalPlus extends Controller {
     public function listWebhooks() {
         $this->load->language(self::EXTENSION);
 
+        $output = array();
+
         $method = 'GET';
         $endpoint = 'webhooks';
         $json = '';
@@ -268,10 +271,10 @@ class ControllerPaymentPayPalPlus extends Controller {
             $list = array();
 
             foreach($webhooks->webhooks as $webhook) {
-
                 if ($webhook->url == HTTPS_CATALOG . 'index.php?route=' . self::EXTENSION .'/webhooks') {
                     $webhook_id = $webhook->id;
                 }
+
                 $sub_array = array();
                 $sub_array[] = $webhook->id;
                 $sub_array[] = $webhook->url;
@@ -281,6 +284,7 @@ class ControllerPaymentPayPalPlus extends Controller {
 
             if (!empty($list)) {
                 $output = array("data" => $list);
+
                 if (isset($webhook_id)) {
                     $output['webhook_id'] = $webhook_id;
                 }
@@ -293,7 +297,6 @@ class ControllerPaymentPayPalPlus extends Controller {
 
         $this->response->addHeader('Content-Type: application/json');
         $this->response->setOutput(json_encode($output));
-
     }
 
     public function addWebhooks() {

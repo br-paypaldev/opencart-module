@@ -112,6 +112,7 @@ class ControllerExtensionPaymentPayPalPlus extends Controller {
             'client_secret' => '',
             'sandbox' => '',
             'debug' => '',
+            'save_card' => '',
             'description' => '',
             'extension_discount' => '',
             'order_status_pending_id' => '',
@@ -248,6 +249,8 @@ class ControllerExtensionPaymentPayPalPlus extends Controller {
 
     public function listWebhooks() {
         $this->load->language(self::EXTENSION);
+
+        $output = array();
 
         $method = 'GET';
         $endpoint = 'webhooks';

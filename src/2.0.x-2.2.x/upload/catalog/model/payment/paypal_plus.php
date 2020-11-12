@@ -202,4 +202,26 @@ class ModelPaymentPayPalPlus extends Model {
             WHERE `sale_id` = '" . $this->db->escape($sale_id) . "'
         ");
     }
+
+    public function getCardId($customer_id) {
+        $query = $this->db->query("
+            SELECT card_id
+            FROM `" . DB_PREFIX . "customer_paypal_plus`
+            WHERE `customer_id` = '" . $this->db->escape($customer_id) . "' ORDER BY date_added LIMIT 0,1
+        ");
+
+        if ($query->num_rows) {
+            return $query->row['card_id'];
+        }
+
+        return false;
+    }
+
+    public function saveCardId($customer_id, $card_id) {
+        $this->db->query("
+            INSERT INTO `" . DB_PREFIX . "customer_paypal_plus`
+            (customer_id, card_id)
+            VALUES ('" . $this->db->escape($customer_id) . "', '" . $this->db->escape($card_id) . "')
+        ");
+    }
 }

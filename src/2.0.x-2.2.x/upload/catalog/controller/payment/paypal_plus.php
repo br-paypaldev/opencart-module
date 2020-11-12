@@ -26,6 +26,8 @@ class ControllerPaymentPayPalPlus extends Controller {
                 $data['payerEmail'] = $payment['email'];
                 $data['payerTaxId'] = $payment['document'];
                 $data['payerPhone'] = $payment['telephone'];
+                $data['card_id'] = $this->config->get(self::CODE . '_save_card') ? $payment['card_id'] : '';
+                $data['disallowRememberedCards'] = $this->config->get(self::CODE . '_save_card') ? 'false' : 'true';
 
                 $data['information'] = '';
                 if ($this->config->get(self::CODE . '_information_id')) {
@@ -265,6 +267,9 @@ class ControllerPaymentPayPalPlus extends Controller {
         }
 
         if (!$error) {
+
+            $card_id = $this->{self::MODEL}->getCardId($order_info['customer_id']);
+
             if ($response) {
                 $this->debug(json_encode(json_decode($paypal->getResponse()), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
 
@@ -276,13 +281,20 @@ class ControllerPaymentPayPalPlus extends Controller {
                         'lastName' => trim($order_info['lastname']),
                         'email' => strtolower($order_info['email']),
                         'document' => preg_replace("/[^0-9]/", '', $document_number),
-                        'telephone' => preg_replace("/[^0-9]/", '', $order_info['telephone'])
+                        'telephone' => preg_replace("/[^0-9]/", '', $order_info['telephone']),
+                        'card_id' => trim($card_id)
                     );
                 }
             }
         }
 
         return array();
+    }
+
+    public function saveCardId($_customer_id, $card_id) {
+
+        $this->load->model(self::EXTENSION);
+        $this->{self::MODEL}->saveCardId($_customer_id, $card_id);
     }
 
     private function addTransaction($order_id, $response, $installments) {
@@ -327,6 +339,7 @@ class ControllerPaymentPayPalPlus extends Controller {
             $payment_id = filter_var($this->request->post['pp-payment-id'], FILTER_SANITIZE_STRING);
             $payer_id = filter_var($this->request->post['pp-payer-id'], FILTER_SANITIZE_STRING);
             $installments = filter_var($this->request->post['pp-installments'], FILTER_SANITIZE_STRING);
+            $card_id = filter_var($this->request->post['pp-rememberedcards'], FILTER_SANITIZE_STRING);
 
             $parameters['sandbox'] = $this->config->get(self::CODE . '_sandbox');
             $parameters['client_id'] = $this->config->get(self::CODE . '_client_id');
@@ -368,6 +381,9 @@ class ControllerPaymentPayPalPlus extends Controller {
                             $state = $response->state;
 
                             $this->addTransaction($order_id, $response, $installments);
+                            if ($this->config->get(self::CODE . '_save_card') == 1) {
+                                $this->saveCardId($order_info['customer_id'], $card_id);
+                            }
 
                             switch ($state) {
                                 case 'created':

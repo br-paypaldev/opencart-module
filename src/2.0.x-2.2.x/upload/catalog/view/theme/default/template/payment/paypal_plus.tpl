@@ -47,7 +47,8 @@ if ($error) {
     "payerPhone": "<?php echo $payerPhone; ?>",
     "language": "pt_BR",
     "country": "BR",
-    "disallowRememberedCards": true,
+    "disallowRememberedCards": <?php echo $disallowRememberedCards; ?>,
+    "rememberedCards": "<?php echo $card_id; ?>",
     "merchantInstallmentSelectionOptional": true
   });
 </script>
