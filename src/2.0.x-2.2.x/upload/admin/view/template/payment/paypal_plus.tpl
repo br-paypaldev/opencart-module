@@ -244,23 +244,6 @@
               </div>
               <div class="form-group">
                 <div class="col-sm-3">
-                  <h5><strong><?php echo $entry_save_card; ?></strong></h5>
-                  <span class="help"><i class="fa fa-info-circle"></i> <?php echo $help_save_card; ?></span>
-                </div>
-                <div class="col-sm-8">
-                  <select name="save_card" class="form-control">
-                    <?php if ($save_card) { ?>
-                    <option value="1" selected="selected"><?php echo $text_yes; ?></option>
-                    <option value="0"><?php echo $text_no; ?></option>
-                    <?php } else { ?>
-                    <option value="1"><?php echo $text_yes; ?></option>
-                    <option value="0" selected="selected"><?php echo $text_no; ?></option>
-                    <?php } ?>
-                  </select>
-                </div>
-              </div>
-              <div class="form-group">
-                <div class="col-sm-3">
                   <h5><strong><?php echo $entry_sandbox; ?></strong></h5>
                   <span class="help"><i class="fa fa-info-circle"></i> <?php echo $help_sandbox; ?></span>
                 </div>
@@ -284,6 +267,23 @@
                 <div class="col-sm-8">
                   <select name="debug" class="form-control">
                     <?php if ($debug) { ?>
+                    <option value="1" selected="selected"><?php echo $text_yes; ?></option>
+                    <option value="0"><?php echo $text_no; ?></option>
+                    <?php } else { ?>
+                    <option value="1"><?php echo $text_yes; ?></option>
+                    <option value="0" selected="selected"><?php echo $text_no; ?></option>
+                    <?php } ?>
+                  </select>
+                </div>
+              </div>
+              <div class="form-group">
+                <div class="col-sm-3">
+                  <h5><strong><?php echo $entry_save_card; ?></strong></h5>
+                  <span class="help"><i class="fa fa-info-circle"></i> <?php echo $help_save_card; ?></span>
+                </div>
+                <div class="col-sm-8">
+                  <select name="save_card" class="form-control">
+                    <?php if ($save_card) { ?>
                     <option value="1" selected="selected"><?php echo $text_yes; ?></option>
                     <option value="0"><?php echo $text_no; ?></option>
                     <?php } else { ?>
