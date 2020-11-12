@@ -229,6 +229,21 @@
               </div>
               <div class="form-group">
                 <div class="col-sm-3">
+                  <h5><span class="text-danger">*</span> <strong><?php echo $entry_client_secret; ?></strong></h5>
+                  <span class="help"><i class="fa fa-info-circle"></i> <?php echo $help_client_secret; ?></span>
+                </div>
+                <div class="col-sm-8">
+                  <div class="input-group">
+                    <span class="input-group-addon"><i class="fa fa-plug"></i></span>
+                    <input type="text" name="client_secret" value="<?php echo $client_secret; ?>" placeholder="" class="form-control" maxlength="200" />
+                  </div>
+                  <?php if ($error_client_secret) { ?>
+                  <div class="text-danger"><?php echo $error_client_secret; ?></div>
+                  <?php } ?>
+                </div>
+              </div>
+              <div class="form-group">
+                <div class="col-sm-3">
                   <h5><strong><?php echo $entry_save_card; ?></strong></h5>
                   <span class="help"><i class="fa fa-info-circle"></i> <?php echo $help_save_card; ?></span>
                 </div>
@@ -242,21 +257,6 @@
                     <option value="0" selected="selected"><?php echo $text_no; ?></option>
                     <?php } ?>
                   </select>
-                </div>
-              </div>
-              <div class="form-group">
-                <div class="col-sm-3">
-                  <h5><span class="text-danger">*</span> <strong><?php echo $entry_client_secret; ?></strong></h5>
-                  <span class="help"><i class="fa fa-info-circle"></i> <?php echo $help_client_secret; ?></span>
-                </div>
-                <div class="col-sm-8">
-                  <div class="input-group">
-                    <span class="input-group-addon"><i class="fa fa-plug"></i></span>
-                    <input type="text" name="client_secret" value="<?php echo $client_secret; ?>" placeholder="" class="form-control" maxlength="200" />
-                  </div>
-                  <?php if ($error_client_secret) { ?>
-                  <div class="text-danger"><?php echo $error_client_secret; ?></div>
-                  <?php } ?>
                 </div>
               </div>
               <div class="form-group">
