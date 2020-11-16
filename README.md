@@ -82,7 +82,7 @@ Após preencher o formulário, clique no botão **Salvar**.
 
 Caso a sua dúvida não tenha sido respondida aqui, entre em contato com o PayPal pelo número 0800 047 4482.
 
-E caso necessite de algum suporte técnico e/ou acredita ter encontrado algum problema com este módulo acesse o nosso [portal de suporte técnico](https://www.paypal-support.com/s/?language=pt_B) e abra um ticket detalhamento o seu problema na seção "Fale Conosco".
+E caso necessite de algum suporte técnico e/ou acredita ter encontrado algum problema com este módulo acesse o nosso [portal de suporte técnico](https://www.paypal-support.com/s/?language=pt_BR) e abra um ticket detalhamento o seu problema na seção "Fale Conosco".
 
 ## Changelog
 
