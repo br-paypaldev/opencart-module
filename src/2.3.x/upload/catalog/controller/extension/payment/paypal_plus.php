@@ -1,7 +1,8 @@
 <?php
 class ControllerExtensionPaymentPayPalPlus extends Controller {
+    const TYPE = '';
     const NAME = 'paypal_plus';
-    const CODE = self::NAME;
+    const CODE = self::TYPE . self::NAME;
     const EXTENSION = 'extension/payment/' . self::NAME;
     const MODEL = 'model_extension_payment_paypal_plus';
 

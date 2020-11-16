@@ -1,7 +1,8 @@
 <?php
 class ModelPaymentPayPalPlus extends Model {
+    const TYPE = '';
     const NAME = 'paypal_plus';
-    const CODE = self::NAME;
+    const CODE = self::TYPE . self::NAME;
 
     public function getMethod($address, $total) {
         $query = $this->db->query("

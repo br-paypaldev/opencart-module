@@ -4,8 +4,9 @@ require_once DIR_SYSTEM . 'library/paypal-plus/engine.php';
 class ControllerExtensionPaymentPayPalPlus extends Controller {
     use PayPalPlusEngine;
 
+    const TYPE = '';
     const NAME = 'paypal_plus';
-    const CODE = self::NAME;
+    const CODE = self::TYPE . self::NAME;
     const EXTENSION = 'extension/payment/' . self::NAME;
     const EXTENSIONS = 'extension/extension';
     const PERMISSION = 'extension/paypal_plus';
