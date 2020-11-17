@@ -13,9 +13,9 @@ Para o correto funcionamento das soluções, é necessário verificar se a sua l
 
 ## Checkout Transparente (PayPal Plus)
 
-Diferente dos outros produtos, o PayPal Plus só está disponível para contas PayPal criadas com CNPJ (Conta Empresa) e a sua utilização funciona mediante aprovação comercial. Caso já tenha uma conta PayPal do tipo Empresa, você pode solicitar a utilização do PayPal Plus pelo email: comercial@paypal.com.
+O Checkout Transparente está disponível apenas para contas PayPal cadastradas com CNPJ (Conta Empresa), caso a sua conta seja de pessoa física, você deve abrir uma conta PayPal de pessoa jurídica por este [link](https://www.paypal.com/bizsignup/).
 
-Caso a sua conta seja de pessoa física, você deve abrir uma conta PayPal de pessoa jurídica por este [link](https://www.paypal.com/bizsignup/).
+A solução requer aprovação comercial, entre em contato pelo 0800 721 6959 e solicite agora mesmo.
 
 ***O Checkout Transparente só irá funcionar caso tenha sido aprovado pelo PayPal.**
 
