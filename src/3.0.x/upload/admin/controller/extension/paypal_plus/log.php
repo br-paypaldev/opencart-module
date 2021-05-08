@@ -12,6 +12,16 @@ class ControllerExtensionPayPalPlusLog extends Controller {
 
         $this->document->addScript('//cdnjs.cloudflare.com/ajax/libs/moment.js/2.8.3/locales.min.js');
 
+        $config_admin_language = $this->config->get('config_admin_language');
+
+        $data['calendar_language'] = 'en-gb';
+
+        if ($config_admin_language == 'pt-br') {
+            $data['calendar_language'] = 'pt-br';
+        } elseif ($config_admin_language == 'es-mx' || $config_admin_language == 'es-es') {
+            $data['calendar_language'] = 'es';
+        }
+
         if (isset($this->session->data['error'])) {
             $data['error_warning'] = $this->session->data['error'];
 

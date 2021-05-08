@@ -24,7 +24,7 @@ class ModelExtensionPaymentPayPalPlus extends Model {
             $status = false;
         }
 
-        $currencies = array('BRL');
+        $currencies = array('BRL', 'MXN', 'USD');
         $currency_code = $this->session->data['currency'];
         if (!in_array(strtoupper($currency_code), $currencies)) {
             $status = false;

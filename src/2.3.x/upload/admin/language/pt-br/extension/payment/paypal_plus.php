@@ -6,8 +6,12 @@ $_['heading_title']                = 'PayPal Plus';
 $_['text_extension']               = 'Extensões';
 $_['text_success']                 = 'Pagamento por PayPal Plus modificado com sucesso!';
 $_['text_edit']                    = 'Configurações do pagamento por PayPal Plus';
-$_['text_paypal_plus']             = '<a target="_blank" href="https://www.paypal.com/br/webapps/mpp/paypal-payments-pro"><img src="view/image/payment/paypal_plus.jpg" alt="PayPal Plus" title="PayPal Plus" style="border: 1px solid #EEEEEE;" /></a>';
+$_['text_paypal_plus']             = '<a target="_blank" href="https://www.paypal.com/merchantapps/appcenter/acceptpayments/paypalplus"><img src="view/image/payment/paypal_plus.jpg" alt="PayPal Plus" title="PayPal Plus" style="border: 1px solid #EEEEEE;" /></a>';
 $_['text_requirements']            = 'Requisitos obrigatórios:';
+$_['text_upgrade']                 = 'Está disponível para download a nova versão <b>%s</b> da extensão.';
+$_['text_brazil']                  = 'Brasil';
+$_['text_mexico']                  = 'México';
+$_['text_united_states']           = 'Estados Unidos';
 $_['text_prefix']                  = 'Prefixo no código pedido';
 $_['text_field']                   = 'Campo:';
 $_['text_column']                  = 'Coluna na tabela de pedidos';
@@ -43,14 +47,14 @@ $_['text_sale_reversed']           = 'Quando o pagamento é revertido.';
 $_['info_general']                 = 'Preencha as configurações básicas da extensão.';
 $_['info_store']                   = 'Selecione as lojas em que a extensão será uma opção de pagamento.';
 $_['info_api']                     = 'Preencha as configurações para integração com o PayPal Plus.<br>
-                                      <strong>Importante:</strong> Caso não possua credenciais para o PayPal Plus, entre em contato com o atendimento para empresas do PayPal.';
+                                      <b>Importante:</b> Caso não possua credenciais para o PayPal Plus, entre em contato com o atendimento para empresas do PayPal.';
 $_['info_order_status']            = 'Selecione as situações que serão atribuídas automaticamente ao pedido conforme o retorno do PayPal.';
 $_['info_custom_field']            = 'Configurações para indetificar as informações extras no cadastro do cliente que devem ser enviadas para o PayPal.<br>
-                                      <strong>Importante:</strong> Para cadastrar campos personalizados, vá ao menu <strong>Clientes > Personalizar cadastro</strong> e cadastre os campos extras como CPF e número do endereço.<br>
-                                      <strong>Observação:</strong> Se os campos extras foram criados diretamente na tabela de pedidos, selecione a opção "<strong>Coluna na tabela de pedidos</strong>", e selecione a coluna na tabela <i>*_order</i> correspondente.';
+                                      <b>Importante:</b> Para cadastrar campos personalizados, vá ao menu <b>Clientes > Personalizar cadastro</b> e cadastre os campos extras como CPF e número do endereço.<br>
+                                      <b>Observação:</b> Se os campos extras foram criados diretamente na tabela de pedidos, selecione a opção "<b>Coluna na tabela de pedidos</b>", e selecione a coluna na tabela <i>*_order</i> correspondente.';
 $_['info_checkout']                = 'As informações abaixo serão utilizadas na finalização do pedido.';
 $_['info_webhook']                 = 'Para receber notificações do PayPal sobre mudanças na situação dos pagamentos você deve habilitar e salvar o Webhook.';
-$_['info_webhook_credencials']     = 'Para receber notificações do PayPal através do Webhook é necessário primeiro preencher as credenciais na aba <strong>API</strong> e clicar no botão <strong>Salvar</strong>.';
+$_['info_webhook_credencials']     = 'Para receber notificações do PayPal através do Webhook é necessário primeiro preencher as credenciais na aba <b>API</b> e clicar no botão <b>Salvar</b>.';
 
 // Tab
 $_['tab_general']                  = 'Configurações';
@@ -78,8 +82,9 @@ $_['entry_sort_order']             = 'Posição:';
 $_['entry_stores']                 = 'Lojas:';
 $_['entry_store']                  = 'Loja:';
 $_['entry_client_id']              = 'Client ID:';
-$_['entry_client_secret']          = 'Client Secret:';
+$_['entry_client_secret']          = 'Secret:';
 $_['entry_sandbox']                = 'Sandbox:';
+$_['entry_country']                = 'País:';
 $_['entry_debug']                  = 'Debug:';
 $_['entry_save_card']              = 'Salvar cartão:';
 $_['entry_description']            = 'Descrição:';
@@ -106,6 +111,7 @@ $_['help_prefix']                  = 'Só preencha caso utilize a extensão em v
 $_['help_client_id']               = 'É gerada com orientação do PayPal.';
 $_['help_client_secret']           = 'É gerada com orientação do PayPal.';
 $_['help_sandbox']                 = 'Se Sim, ativa o modo de teste.';
+$_['help_country']                 = 'Selecione o país de sua conta no PayPal, para que o iframe seja renderizado corretamente.';
 $_['help_debug']                   = 'Se Sim, armazena no log as informações recebidas através da API do PayPal Plus.';
 $_['help_save_card']               = 'Se Sim, o PayPal oferece a opção de armazenar os dados do cartão para compras posteriores.';
 $_['help_description']             = 'Descrição do pagamento para o PayPal.';
@@ -116,7 +122,7 @@ $_['help_order_status_completed']  = 'Quando estiver concluída no PayPal.';
 $_['help_order_status_refunded']   = 'Quando for reembolsada.';
 $_['help_order_status_dispute']    = 'Quando o cliente abre uma disputa.';
 $_['help_order_status_reversed']   = 'Quando a disputa é revertida.';
-$_['help_custom_document_id']      = 'Selecione o campo que armazena o CPF no cadastro do cliente.';
+$_['help_custom_document_id']      = 'Selecione o campo que armazena o CPF no cadastro do cliente. (Obrigatório no Brasil)';
 $_['help_custom_number_id']        = 'Selecione o campo que armazena o número no endereço do cliente.';
 $_['help_custom_complement_id']    = 'Só selecione se você tiver o campo para preencher o complemento no endereço do cliente.';
 $_['help_extension_title']         = 'Será exibido no checkout na seleção da forma de pagamento.';
@@ -131,7 +137,7 @@ $_['error_requirements']           = '<b>Atenção:</b> Os requisitos obrigatór
 $_['error_stores']                 = 'É necessário selecionar pelo menos uma loja.';
 $_['error_customer_groups']        = 'É necessário selecionar pelo menos um tipo de cliente.';
 $_['error_field_column']           = 'Selecione a coluna.';
-$_['error_required']               = 'Preenchimento obrigatório.';
+$_['error_required']               = 'Campo obrigatório.';
 $_['error_prefix']                 = 'Preencha o prefixo desta loja.';
 $_['error_webhook_event_types']    = 'Não foi possível listar os eventos para o Webhook. Verifique se você preencheu as credenciais corretamente e tente novamente.';
 $_['error_webhook_indisponible']   = 'Não foi possível habilitar o Webhook. Verifique se você preencheu as credenciais corretamente e tente novamente.';

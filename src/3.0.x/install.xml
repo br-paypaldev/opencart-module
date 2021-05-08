@@ -1,10 +1,10 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
 <modification>
-  <name>PayPal Plus para OpenCart 3.0.x</name>
+  <name>PayPal Plus for OpenCart 3.0</name>
   <code>paypal-plus</code>
-  <version>1.0.0</version>
-  <author>PayPal Brasil</author>
-  <link>https://www.paypal.com/br/</link>
+  <version>1.1.0</version>
+  <author>PayPal</author>
+  <link>https://www.paypal.com/</link>
   <file path="admin/controller/startup/permission.php">
     <operation>
       <search><![CDATA[$extension = array(]]></search>
@@ -15,7 +15,7 @@
     <operation>
       <search><![CDATA[if ($sale) {]]></search>
       <add position="before"><![CDATA[
-        // Paypal Plus
+        // PayPal Plus
         $this->load->language('extension/paypal_plus/menu');
 
         $paypal_plus = array();

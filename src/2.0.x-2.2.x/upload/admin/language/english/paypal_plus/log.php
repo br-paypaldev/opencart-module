@@ -1,6 +1,6 @@
 <?php
 // Heading
-$_['heading_title']    = 'Log de informações PayPal Plus';
+$_['heading_title']    = 'Log de informações';
 
 // Text
 $_['text_success']     = 'O log foi apagado!';

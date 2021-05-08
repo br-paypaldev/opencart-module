@@ -43,10 +43,10 @@ if ($error) {
     "payerLastName": "<?php echo $payerLastName; ?>",
     "payerEmail": "<?php echo $payerEmail; ?>",
     "payerTaxId": "<?php echo $payerTaxId; ?>",
-    "payerTaxIdType": "BR_CPF",
+    "payerTaxIdType": "<?php echo $payerTaxIdType; ?>",
     "payerPhone": "<?php echo $payerPhone; ?>",
-    "language": "pt_BR",
-    "country": "BR",
+    "language": "<?php echo $language; ?>",
+    "country": "<?php echo $country; ?>",
     "disallowRememberedCards": <?php echo $disallowRememberedCards; ?>,
     "rememberedCards": "<?php echo $card_id; ?>",
     "merchantInstallmentSelectionOptional": true
@@ -74,7 +74,7 @@ if ($error) {
   } else if (window.attachEvent) {
     window.attachEvent("onmessage", messageListener);
   } else {
-    throw new Error("Não é possível anexar o ouvinte de mensagens!");
+    throw new Error("Can't attach message listener");
   }
 
   function messageListener(event) {

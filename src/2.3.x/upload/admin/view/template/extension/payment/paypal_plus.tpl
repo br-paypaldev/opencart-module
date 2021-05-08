@@ -15,6 +15,9 @@
     </div>
   </div>
   <div class="container-fluid">
+    <?php if ($upgrade) { ?>
+    <div class="alert alert-warning"><i class="fa fa-info-circle"></i> <?php echo $upgrade; ?></div>
+    <?php } ?>
     <?php if ($requirements) { ?>
     <div class="alert alert-warning">
       <h4><b><?php echo $text_requirements; ?></b></h4>
@@ -24,14 +27,10 @@
     </div>
     <?php } ?>
     <?php if ($error_warning) { ?>
-    <div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> <?php echo $error_warning; ?>
-      <button type="button" class="close" data-dismiss="alert">&times;</button>
-    </div>
+    <div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> <?php echo $error_warning; ?></div>
     <?php } ?>
     <?php if ($success) { ?>
-    <div class="alert alert-success"><i class="fa fa-check-circle"></i> <?php echo $success; ?>
-      <button type="button" class="close" data-dismiss="alert">&times;</button>
-    </div>
+    <div class="alert alert-success"><i class="fa fa-check-circle"></i> <?php echo $success; ?></div>
     <?php } ?>
     <div class="panel panel-default">
       <div class="panel-heading">
@@ -261,6 +260,23 @@
               </div>
               <div class="form-group">
                 <div class="col-sm-3">
+                  <h5><strong><?php echo $entry_country; ?></strong></h5>
+                  <span class="help"><i class="fa fa-info-circle"></i> <?php echo $help_country; ?></span>
+                </div>
+                <div class="col-sm-8">
+                  <select name="country" class="form-control">
+                    <?php foreach ($countries as $key => $value) { ?>
+                    <?php if ($key == $country) { ?>
+                    <option value="<?php echo $key; ?>" selected="selected"><?php echo $value; ?></option>
+                    <?php } else { ?>
+                    <option value="<?php echo $key; ?>"><?php echo $value; ?></option>
+                    <?php } ?>
+                    <?php } ?>
+                  </select>
+                </div>
+              </div>
+              <div class="form-group">
+                <div class="col-sm-3">
                   <h5><strong><?php echo $entry_debug; ?></strong></h5>
                   <span class="help"><i class="fa fa-info-circle"></i> <?php echo $help_debug; ?></span>
                 </div>
@@ -456,6 +472,9 @@
                     <?php } ?>
                     <?php } ?>
                   </select>
+                  <?php if ($error_custom_document_id) { ?>
+                  <div class="text-danger"><?php echo $error_custom_document_id; ?></div>
+                  <?php } ?>
                 </div>
                 <div class="col-sm-3" id="document_column">
                   <label><?php echo $text_document; ?></label>
@@ -500,6 +519,9 @@
                     <?php } ?>
                     <?php } ?>
                   </select>
+                  <?php if ($error_custom_number_id) { ?>
+                  <div class="text-danger"><?php echo $error_custom_number_id; ?></div>
+                  <?php } ?>
                 </div>
                 <div class="col-sm-3" id="number_payment_column">
                   <label><?php echo $text_number_payment; ?></label>
@@ -701,7 +723,7 @@
     </div>
   </div>
   <script src="//cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
-  <script type="text/javascript"><!--
+  <script type="text/javascript">
     $(document).ready(function() {
       $('#add-webhook, #table-my-webhooks, #table-webhooks-events, #btn-send').hide();
       loadWebhooks();
@@ -712,7 +734,7 @@
       $.ajax({
         url: 'index.php?route=extension/payment/paypal_plus/listWebhooks&token=<?php echo $token; ?>', dataType: 'json',
         beforeSend: function() {
-          $('#progress').html('<div class="alert alert-warning"><i class="fa fa-spinner fa-spin"></i> <?php echo $text_webhook_loading; ?><button type="button" class="close" data-dismiss="alert">&times;</button></div>');
+          $('#progress').html('<div class="alert alert-warning"><i class="fa fa-spinner fa-spin"></i> <?php echo $text_webhook_loading; ?></div>');
         },
         complete: function() {
           $('#progress').html('');
@@ -725,7 +747,7 @@
           }
           else if (jsonData.error) {
             $('html, body').animate({ scrollTop: 0 }, 'slow');
-            $('#progress').html('<div class="alert alert-warning"><i class="fa fa-spinner fa-spin"></i> ' + jsonData.error + '<button type="button" class="close" data-dismiss="alert">&times;</button></div>');
+            $('#progress').html('<div class="alert alert-warning"><i class="fa fa-spinner fa-spin"></i> ' + jsonData.error + '</div>');
           } else {
             if (jsonData.webhook_id) {
               $('#webhook_id').val(jsonData.webhook_id);
@@ -762,7 +784,7 @@
           $(this).prop('disabled', true);
           $('#add-webhook').hide();
           $('html, body').animate({ scrollTop: 0 }, 'slow');
-          $('#progress').html('<div class="alert alert-warning"><i class="fa fa-spinner fa-spin"></i> <?php echo $text_webhook_add; ?><button type="button" class="close" data-dismiss="alert">&times;</button></div>');
+          $('#progress').html('<div class="alert alert-warning"><i class="fa fa-spinner fa-spin"></i> <?php echo $text_webhook_add; ?></div>');
         },
         complete: function() {
           $(this).prop('disabled', false);
@@ -771,7 +793,7 @@
         success: function(jsonData) {
           if (jsonData.error) {
             $('#add-webhook').show();
-            $('#progress').html('<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> ' + jsonData.error + ' <button type="button" class="close" data-dismiss="alert">&times;</button></div>');
+            $('#progress').html('<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> ' + jsonData.error + '</div>');
           } else {
             $('#table-webhooks-events, #btn-send').show();
             $('#table-webhooks-events').DataTable({
@@ -814,7 +836,7 @@
             $(this).prop('disabled', true);
             $('#table-webhooks-events, #btn-send').hide();
             $('html, body').animate({ scrollTop: 0 }, 'slow');
-            $('#progress').html('<div class="alert alert-warning"><i class="fa fa-spinner fa-spin"></i> <?php echo $text_webhook_saving; ?><button type="button" class="close" data-dismiss="alert">&times;</button></div>');
+            $('#progress').html('<div class="alert alert-warning"><i class="fa fa-spinner fa-spin"></i> <?php echo $text_webhook_saving; ?></div>');
           },
           complete: function() {
             $(this).prop('disabled', false);
@@ -822,17 +844,17 @@
           success: function(jsonData) {
             if (jsonData.error) {
               $('#table-webhooks-events, #btn-send').show();
-              $('#progress').html('<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> ' + jsonData.error + ' <button type="button" class="close" data-dismiss="alert">&times;</button></div>');
+              $('#progress').html('<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> ' + jsonData.error + '</div>');
             } else {
               $('#table-webhooks-events').DataTable().destroy();
-              $('#progress').html('<div class="alert alert-success"><i class="fa fa-exclamation-circle"></i> ' + jsonData.success + ' <button type="button" class="close" data-dismiss="alert">&times;</button></div>');
+              $('#progress').html('<div class="alert alert-success"><i class="fa fa-exclamation-circle"></i> ' + jsonData.success + '</div>');
               loadWebhooks();
             }
           }
         });
       } else {
         $('html, body').animate({ scrollTop: 0 }, 'slow');
-        $('#progress').html('<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> <?php echo $error_webhook_empty; ?><button type="button" class="close" data-dismiss="alert">&times;</button></div>');
+        $('#progress').html('<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> <?php echo $error_webhook_empty; ?></div>');
       }
     });
 
@@ -847,7 +869,7 @@
             $('#del-' + id).prop('disabled', true);
             $('#table-my-webhooks').hide();
             $('html, body').animate({ scrollTop: 0 }, 'slow');
-            $('#progress').html('<div class="alert alert-warning"><i class="fa fa-spinner fa-spin"></i> <?php echo $text_webhook_deleting; ?><button type="button" class="close" data-dismiss="alert">&times;</button></div>');
+            $('#progress').html('<div class="alert alert-warning"><i class="fa fa-spinner fa-spin"></i> <?php echo $text_webhook_deleting; ?></div>');
           },
           complete: function() {
             $('#del-' + id).prop('disabled', false);
@@ -855,9 +877,9 @@
           success: function(jsonData) {
             if (jsonData.error) {
               $('#table-my-webhooks').show();
-              $('#progress').html('<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> ' + jsonData.error + '<button type="button" class="close" data-dismiss="alert">&times;</button></div>');
+              $('#progress').html('<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> ' + jsonData.error + '</div>');
             } else {
-              $('#progress').html('<div class="alert alert-success"><i class="fa fa-exclamation-circle"></i> ' + jsonData.success + ' <button type="button" class="close" data-dismiss="alert">&times;</button></div>');
+              $('#progress').html('<div class="alert alert-success"><i class="fa fa-exclamation-circle"></i> ' + jsonData.success + '</div>');
               loadWebhooks();
             }
           }
@@ -891,10 +913,12 @@
     $('select[name="custom_document_id"]').change(function() {
       if ($(this).val() == 'C') { $('#document_column').show(); } else { $('#document_column').hide(); }
     });
+
     $('select[name="custom_number_id"]').change(function() {
       if ($(this).val() == 'C') { $('#number_payment_column').show(); } else { $('#number_payment_column').hide(); }
       if ($(this).val() == 'C') { $('#number_shipping_column').show(); } else { $('#number_shipping_column').hide(); }
     });
+
     $('select[name="custom_complement_id"]').change(function() {
       if ($(this).val() == 'C') { $('#complement_payment_column').show(); } else { $('#complement_payment_column').hide(); }
       if ($(this).val() == 'C') { $('#complement_shipping_column').show(); } else { $('#complement_shipping_column').hide(); }
@@ -916,6 +940,6 @@
         $(prefix).attr("required", false);
       }
     });
-  //--></script>
+  </script>
 </div>
 <?php echo $footer; ?>

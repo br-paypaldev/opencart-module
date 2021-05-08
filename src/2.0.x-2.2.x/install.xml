@@ -1,10 +1,10 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
 <modification>
-  <name>PayPal Plus para OpenCart 2.0.x até 2.2.x</name>
+  <name>PayPal Plus for OpenCart 2.0 to 2.2</name>
   <code>paypal-plus</code>
-  <version>1.0.0</version>
-  <author>PayPal Brasil</author>
-  <link>https://www.paypal.com/br/</link>
+  <version>1.1.0</version>
+  <author>PayPal</author>
+  <link>https://www.paypal.com/</link>
   <file path="admin/controller/common/menu.php">
     <operation>
       <search><![CDATA[return]]></search>

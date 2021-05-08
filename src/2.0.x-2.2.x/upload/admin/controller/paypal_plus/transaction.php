@@ -14,6 +14,21 @@ class ControllerPayPalPlusTransaction extends Controller {
 
         $this->document->setTitle($this->language->get('heading_title'));
 
+        $this->document->addScript('//cdnjs.cloudflare.com/ajax/libs/moment.js/2.8.3/locales.min.js');
+
+        $config_admin_language = $this->config->get('config_admin_language');
+
+        $data['calendar_language'] = 'en-gb';
+        $data['datatables_language'] = '//cdn.datatables.net/plug-ins/1.10.21/i18n/English.json';
+
+        if ($config_admin_language == 'pt-br') {
+            $data['calendar_language'] = 'pt-br';
+            $data['datatables_language'] = '//cdn.datatables.net/plug-ins/1.10.21/i18n/Portuguese-Brasil.json';
+        } elseif ($config_admin_language == 'es-mx' || $config_admin_language == 'es-es') {
+            $data['calendar_language'] = 'es';
+            $data['datatables_language'] = '//cdn.datatables.net/plug-ins/1.10.21/i18n/Spanish.json';
+        }
+
         $this->document->addStyle('//cdn.datatables.net/1.10.21/css/dataTables.bootstrap4.min.css');
         $this->document->addStyle('//cdn.datatables.net/buttons/1.6.2/css/buttons.bootstrap.min.css');
         $this->document->addScript('//cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js');
@@ -32,6 +47,11 @@ class ControllerPayPalPlusTransaction extends Controller {
         $data['breadcrumbs'][] = array(
             'text' => $this->language->get('text_home'),
             'href' => $this->url->link('common/dashboard', 'token=' . $this->session->data['token'], true)
+        );
+
+        $data['breadcrumbs'][] = array(
+            'text' => $this->language->get('text_paypal_plus'),
+            'href' => ''
         );
 
         $data['breadcrumbs'][] = array(
@@ -72,21 +92,27 @@ class ControllerPayPalPlusTransaction extends Controller {
             switch ($transaction['status']) {
                 case 'pending':
                     $status = $this->language->get('text_pending');
+
                     break;
                 case 'analyze':
                     $status = $this->language->get('text_analyze');
+
                     break;
                 case 'approved':
                     $status = $this->language->get('text_approved');
+
                     break;
                 case 'completed':
                     $status = $this->language->get('text_completed');
+
                     break;
                 case 'refunded':
                     $status = $this->language->get('text_refunded');
+
                     break;
                 case 'partially_refund':
                     $status = $this->language->get('text_partially_refund');
+
                     break;
             }
 
@@ -108,7 +134,7 @@ class ControllerPayPalPlusTransaction extends Controller {
                 $action[] = array(
                     'name' => 'button-refund',
                     'title' => $this->language->get('button_refund'),
-                    'icon' => 'fa fa-times',
+                    'icon' => 'fa fa-paypal',
                     'class' => 'btn btn-warning',
                     'id' => $transaction['order_paypal_plus_id'],
                     'sale_id' => $transaction['sale_id']
@@ -132,7 +158,7 @@ class ControllerPayPalPlusTransaction extends Controller {
                 'date_added' => date('d/m/Y H:i:s', strtotime($transaction['date_added'])),
                 'customer' => $transaction['customer'],
                 'payment_id' => $transaction['payment_id'],
-                'total_value' =>  $this->currency->format((float) $transaction['total_value'], $this->config->get('config_currency')),
+                'total_value' =>  $this->currency->format((float) $transaction['total_value'], $transaction['currency_code'], '1.00'),
                 'status' => $status,
                 'view_order' => $this->url->link('sale/order/info', 'token=' . $this->session->data['token'] . '&order_id=' . $transaction['order_id'], true),
                 'action' => $action
@@ -177,18 +203,23 @@ class ControllerPayPalPlusTransaction extends Controller {
                     switch ($transaction['status']) {
                         case 'pending':
                             $status = $this->language->get('text_analyze');
+
                             break;
                         case 'completed':
                             $status = $this->language->get('text_completed');
+
                             break;
                         case 'approved':
                             $status = $this->language->get('text_approved');
+
                             break;
                         case 'refunded':
                             $status = $this->language->get('text_refunded');
+
                             break;
                         case 'partially_refund':
                             $status = $this->language->get('text_partially_refund');
+
                             break;
                     }
 
@@ -197,10 +228,10 @@ class ControllerPayPalPlusTransaction extends Controller {
                         'payer_email' => $transaction['payer_email'],
                         'invoice_number' => $transaction['invoice_number'],
                         'total_value' => $transaction['total_value'],
-                        'total_value_txt'=> $this->currency->format((float) $transaction['total_value'], $this->config->get('config_currency')),
+                        'total_value_txt'=> $this->currency->format((float) $transaction['total_value'], $transaction['currency_code'], '1.00'),
                         'refunded_value' => (float) $transaction['refunded_value'],
                         'installments' => (int) $transaction['installments'],
-                        'refunded_value_txt' => $this->currency->format((float) $transaction['refunded_value'], $this->config->get('config_currency')),
+                        'refunded_value_txt' => $this->currency->format((float) $transaction['refunded_value'], $transaction['currency_code'], '1.00'),
                         'status' => $status,
                         'json' => json_encode(json_decode($transaction['json']), JSON_PRETTY_PRINT),
                         'paypal_plus_id' => $transaction['order_paypal_plus_id']
@@ -236,49 +267,64 @@ class ControllerPayPalPlusTransaction extends Controller {
                     $parameters['sandbox'] = $this->config->get(self::CODE . '_sandbox');
                     $parameters['client_id'] = $this->config->get(self::CODE . '_client_id');
                     $parameters['client_secret'] = $this->config->get(self::CODE . '_client_secret');
+                    $parameters['country_code'] = $this->config->get(self::CODE . '_country');
                     $parameters['order_id'] = $transaction['order_id'];
                     $parameters['sale_id'] = $transaction['sale_id'];
 
-                    require_once(DIR_SYSTEM . 'library/paypal-plus/paypal_plus.php');
-                    $paypal = new PayPalPlus();
-                    $paypal->setParameters($parameters);
-                    $response = $paypal->getSale();
+                    try {
+                        require_once(DIR_SYSTEM . 'library/paypal-plus/paypal_plus.php');
+                        $paypal = new PayPalPlus();
+                        $paypal->setParameters($parameters);
+                        $response = $paypal->getSale();
 
-                    $this->debug($response);
+                        $this->debug($response);
 
-                    if (isset($response->id)) {
-                        $status = $response->state;
+                        if (isset($response->id)) {
+                            $status = $response->state;
 
-                        $fields = array(
-                            'paypal_plus_id' => $transaction['order_paypal_plus_id'],
-                            'payment_id' => $response->parent_payment,
-                            'total_value' => $response->amount->total,
-                            'invoice_number' => isset($response->invoice_number) ? $response->invoice_number : '',
-                            'installments' => isset($response->credit_financing_offered->term) ? $response->credit_financing_offered->term : '1',
-                            'status' => $status
+                            $fields = array(
+                                'paypal_plus_id' => $transaction['order_paypal_plus_id'],
+                                'payment_id' => $response->parent_payment,
+                                'total_value' => $response->amount->total,
+                                'invoice_number' => isset($response->invoice_number) ? $response->invoice_number : '',
+                                'installments' => isset($response->credit_financing_offered->term) ? $response->credit_financing_offered->term : '1',
+                                'status' => $status
+                            );
+
+                            $this->{self::MODEL}->editTransaction($fields);
+
+                            switch ($status) {
+                                case 'pending':
+                                    $message = $this->language->get('text_analyze');
+
+                                    break;
+                                case 'completed':
+                                    $message = $this->language->get('text_completed');
+
+                                    break;
+                                case 'approved':
+                                    $message = $this->language->get('text_approved');
+
+                                    break;
+                            }
+
+                            if (isset($message)) {
+                                $json['success'] = $message;
+                            } else {
+                                $json['success'] = $this->language->get('text_consulted');
+                            }
+                        } else {
+                            $json['error'] = $this->language->get('error_search');
+                        }
+                    } catch (Error | Exception $e) {
+                        $this->debug($parameters);
+
+                        $error = array(
+                            $e->getCode(),
+                            $e->getMessage()
                         );
 
-                        $this->{self::MODEL}->editTransaction($fields);
-
-                        switch ($status) {
-                            case 'pending':
-                                $message = $this->language->get('text_analyze');
-                                break;
-                            case 'completed':
-                                $message = $this->language->get('text_completed');
-                                break;
-                            case 'approved':
-                                $message = $this->language->get('text_approved');
-                                break;
-                        }
-
-                        if (isset($message)) {
-                            $json['success'] = $message;
-                        } else {
-                            $json['success'] = $this->language->get('text_consulted');
-                        }
-                    } else {
-                        $json['error'] = $this->language->get('error_search');
+                        $this->debug(implode(PHP_EOL, $error));
                     }
                 } else {
                     $json['error'] = $this->language->get('error_search');
@@ -316,54 +362,66 @@ class ControllerPayPalPlusTransaction extends Controller {
                         $parameters['sandbox'] = $this->config->get(self::CODE . '_sandbox');
                         $parameters['client_id'] = $this->config->get(self::CODE . '_client_id');
                         $parameters['client_secret'] = $this->config->get(self::CODE . '_client_secret');
+                        $parameters['country_code'] = $this->config->get(self::CODE . '_country');
                         $parameters['order_id'] = $transaction['order_id'];
                         $parameters['sale_id'] = $transaction['sale_id'];
                         $parameters['amount'] = $amount;
                         $parameters['currency'] = json_decode($transaction['json'])->transactions[0]->related_resources[0]->sale->amount->currency;
                         $parameters['invoice_number'] = $transaction['invoice_number'];
 
-                        require_once(DIR_SYSTEM . 'library/paypal-plus/paypal_plus.php');
-                        $paypal = new PayPalPlus();
-                        $paypal->setParameters($parameters);
+                        try {
+                            require_once(DIR_SYSTEM . 'library/paypal-plus/paypal_plus.php');
+                            $paypal = new PayPalPlus();
+                            $paypal->setParameters($parameters);
 
-                        $response = $paypal->setRefund();
+                            $response = $paypal->setRefund();
 
-                        $this->debug($response);
+                            $this->debug($response);
 
-                        if (
-                            isset($response->state) &&
-                            $response->state == 'completed'
-                        ) {
-                            $total_value = (float) $transaction['total_value'];
-                            $total_refunded = (float) $response->total_refunded_amount->value;
+                            if (
+                                isset($response->state) &&
+                                $response->state == 'completed'
+                            ) {
+                                $total_value = (float) $transaction['total_value'];
+                                $total_refunded = (float) $response->total_refunded_amount->value;
 
-                            if ($total_value == $total_refunded) {
-                                $status = 'refunded';
-                            } elseif ($total_value > $total_refunded) {
-                                $status = 'partially_refund';
+                                if ($total_value == $total_refunded) {
+                                    $status = 'refunded';
+                                } elseif ($total_value > $total_refunded) {
+                                    $status = 'partially_refund';
+                                } else {
+                                    $status = $transaction['status'];
+                                }
+
+                                $fields = array(
+                                    'paypal_plus_id' => $transaction['order_paypal_plus_id'],
+                                    'payment_id' => $response->parent_payment,
+                                    'refunded_value' => $total_refunded,
+                                    'status' => $status,
+                                    'json' => json_encode($response, JSON_HEX_QUOT|JSON_HEX_APOS)
+                                );
+
+                                $this->{self::MODEL}->refundTransaction($fields);
+
+                                $json['success'] = $this->language->get('text_solicited_refund');
                             } else {
-                                $status = $transaction['status'];
+                                if ($response->name == 'REFUND_EXCEEDED_TRANSACTION_AMOUNT') {
+                                    $json['error'] = $this->language->get('error_value');
+                                } elseif ($response->name == 'TRANSACTION_ALREADY_REFUNDED') {
+                                    $json['error'] = $this->language->get('error_refunded');
+                                } else {
+                                    $json['error'] = $this->language->get('error_refund');
+                                }
                             }
+                        } catch (Error | Exception $e) {
+                            $this->debug($parameters);
 
-                            $fields = array(
-                                'paypal_plus_id' => $transaction['order_paypal_plus_id'],
-                                'payment_id' => $response->parent_payment,
-                                'refunded_value' => $total_refunded,
-                                'status' => $status,
-                                'json' => json_encode($response, JSON_HEX_QUOT|JSON_HEX_APOS)
+                            $error = array(
+                                $e->getCode(),
+                                $e->getMessage()
                             );
 
-                            $this->{self::MODEL}->refundTransaction($fields);
-
-                            $json['success'] = $this->language->get('text_solicited_refund');
-                        } else {
-                            if ($response->name == 'REFUND_EXCEEDED_TRANSACTION_AMOUNT') {
-                                $json['error'] = $this->language->get('error_value');
-                            } else if ($response->name == 'TRANSACTION_ALREADY_REFUNDED') {
-                                $json['error'] = $this->language->get('error_refunded');
-                            } else {
-                                $json['error'] = $this->language->get('error_refund');
-                            }
+                            $this->debug(implode(PHP_EOL, $error));
                         }
                     } else {
                         $json['error'] = $this->language->get('error_value_zero');

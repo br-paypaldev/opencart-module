@@ -107,7 +107,7 @@ class ModelExtensionPaymentPayPalPlus extends Model {
 
     public function getTransactions($filter = array()) {
         $sql = "
-            SELECT opp.order_id, opp.order_paypal_plus_id, o.date_added, opp.sale_id, opp.total_value, opp.refunded_value, CONCAT(o.firstname, ' ', o.lastname) as customer, opp.payment_id, opp.status
+            SELECT opp.order_id, opp.order_paypal_plus_id, o.date_added, o.currency_code, opp.sale_id, opp.total_value, opp.refunded_value, CONCAT(o.firstname, ' ', o.lastname) as customer, opp.payment_id, opp.status
             FROM `" . DB_PREFIX . "order_paypal_plus` opp
             INNER JOIN `" . DB_PREFIX . "order` o ON (o.order_id = opp.order_id)
             WHERE opp.order_id > '0'
@@ -138,7 +138,7 @@ class ModelExtensionPaymentPayPalPlus extends Model {
 
     public function getTransaction($paypal_plus_id) {
         $query = $this->db->query("
-            SELECT o.store_id, opp.*, CONCAT(o.firstname, ' ', o.lastname) as payer_name, o.email payer_email
+            SELECT o.store_id, o.currency_code, opp.*, CONCAT(o.firstname, ' ', o.lastname) as payer_name, o.email payer_email
             FROM `" . DB_PREFIX . "order_paypal_plus` opp
             INNER JOIN `" . DB_PREFIX . "order` o ON (o.order_id = opp.order_id)
             WHERE opp.order_paypal_plus_id = '" . (int) $paypal_plus_id . "'

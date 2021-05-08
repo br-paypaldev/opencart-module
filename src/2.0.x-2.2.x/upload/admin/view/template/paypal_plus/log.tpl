@@ -9,26 +9,24 @@
       <h1><?php echo $heading_title; ?></h1>
       <ul class="breadcrumb">
         <?php foreach ($breadcrumbs as $breadcrumb) { ?>
-        <li><a href="<?php echo $breadcrumb['href']; ?>"><?php echo $breadcrumb['text']; ?></a></li>
+        <?php if ($breadcrumb['href']) { ?>
+        <li><a href="<?php echo $breadcrumb['href']?>"><?php echo $breadcrumb['text']?></a></li>
+        <?php } else { ?>
+        <li><?php echo $breadcrumb['text']?></li>
+        <?php } ?>
         <?php } ?>
       </ul>
     </div>
   </div>
   <div class="container-fluid">
     <?php if ($error_warning) { ?>
-    <div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> <?php echo $error_warning; ?>
-      <button type="button" class="close" data-dismiss="alert">&times;</button>
-    </div>
+    <div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> <?php echo $error_warning; ?></div>
     <?php } ?>
     <?php if ($error_empty) { ?>
-    <div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> <?php echo $error_empty; ?>
-      <button type="button" class="close" data-dismiss="alert">&times;</button>
-    </div>
+    <div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> <?php echo $error_empty; ?></div>
     <?php } ?>
     <?php if ($success) { ?>
-    <div class="alert alert-success"><i class="fa fa-check-circle"></i> <?php echo $success; ?>
-      <button type="button" class="close" data-dismiss="alert">&times;</button>
-    </div>
+    <div class="alert alert-success"><i class="fa fa-check-circle"></i> <?php echo $success; ?></div>
     <?php } ?>
     <div class="panel panel-default">
       <div class="panel-heading">
@@ -57,11 +55,11 @@
       </div>
     </div>
   </div>
-  <script type="text/javascript"><!--
+  <script type="text/javascript">
     const defaultDate = '<?php echo $filter_date; ?>';
 
     $('.date').datetimepicker({
-      language: 'pt-br',
+      language: '<?php echo $calendar_language; ?>',
       pickTime: false,
       format: 'YYYY-MM-DD',
       enabledDates: <?php echo $dates; ?>,
@@ -71,7 +69,7 @@
         location.href = `<?php echo $action; ?>&filter_date=${$(this).val()}`.replace(/&amp;/, '&');
       }
     });
-  //--></script>
+  </script>
   <style>
     pre {
       max-height: 350px;

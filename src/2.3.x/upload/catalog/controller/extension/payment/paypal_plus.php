@@ -18,6 +18,7 @@ class ControllerExtensionPaymentPayPalPlus extends Controller {
 
             if ($payment) {
                 $mode = ($this->config->get(self::CODE . '_sandbox')) ? 'sandbox' : 'live';
+                $country_code = $this->config->get(self::CODE . '_country');
 
                 $data['mode'] = $mode;
                 $data['approval_url'] = $payment['href'];
@@ -25,10 +26,26 @@ class ControllerExtensionPaymentPayPalPlus extends Controller {
                 $data['payerFirstName'] = $payment['firstname'];
                 $data['payerLastName'] = $payment['lastName'];
                 $data['payerEmail'] = $payment['email'];
-                $data['payerTaxId'] = $payment['document'];
                 $data['payerPhone'] = $payment['telephone'];
                 $data['card_id'] = $this->config->get(self::CODE . '_save_card') ? $payment['card_id'] : '';
                 $data['disallowRememberedCards'] = $this->config->get(self::CODE . '_save_card') ? 'false' : 'true';
+
+                if ($country_code == 'BR') {
+                    $data['payerTaxId'] = $payment['document'];
+                    $data['payerTaxIdType'] = 'BR_CPF';
+                    $data['language'] = 'pt_BR';
+                    $data['country'] = 'BR';
+                } elseif ($country_code == 'MX') {
+                    $data['payerTaxId'] = '';
+                    $data['payerTaxIdType'] = '';
+                    $data['language'] = 'es_MX';
+                    $data['country'] = 'MX';
+                } elseif ($country_code == 'US') {
+                    $data['payerTaxId'] = '';
+                    $data['payerTaxIdType'] = '';
+                    $data['language'] = 'en_US';
+                    $data['country'] = 'US';
+                }
 
                 $data['information'] = '';
                 if ($this->config->get(self::CODE . '_information_id')) {
@@ -60,13 +77,12 @@ class ControllerExtensionPaymentPayPalPlus extends Controller {
         $this->load->model('checkout/order');
         $order_info = $this->model_checkout_order->getOrder($order_id);
 
+        $country_code = $this->config->get(self::CODE . '_country');
         $currency_code = strtoupper($order_info['currency_code']);
         $currency_value = $order_info['currency_value'];
         $store_name = $order_info['store_name'];
 
         $this->load->model(self::EXTENSION);
-
-        $subtotal = 0;
 
         $parameters = array();
         $parameters['items'] = array();
@@ -75,7 +91,6 @@ class ControllerExtensionPaymentPayPalPlus extends Controller {
 
         foreach ($products as $product) {
             $price = $product['price'] * $currency_value;
-            $subtotal += $price * $product['quantity'];
 
             $parameters['items'][] = array(
                 'sku' => $product['product_id'],
@@ -90,7 +105,6 @@ class ControllerExtensionPaymentPayPalPlus extends Controller {
         if (!empty($this->session->data['vouchers'])) {
             foreach ($this->session->data['vouchers'] as $voucher) {
                 $price = $voucher['amount'] * $currency_value;
-                $subtotal += $price;
 
                 $parameters['items'][] = array(
                     'sku' => 'voucher',
@@ -106,28 +120,32 @@ class ControllerExtensionPaymentPayPalPlus extends Controller {
         $discount_description = '';
         $discount_value = 0;
 
-        $tax_description = '';
-        $tax_value = 0;
+        $taxes_fees = array('tax', 'low_order_fee', 'handling');
+        $taxes_fees_description = '';
+        $taxes_fees_value = 0;
+
+        $total_value = 0;
 
         $order_totals = $this->{self::MODEL}->getOrderTotals($order_id);
         foreach ($order_totals as $order_total) {
-            if ($order_total['value'] < 0 ) {
+            if ($order_total['value'] < 0) {
                 $discount_description .= $order_total['title'] . '/';
                 $discount_value += abs($order_total['value']);
             }
-            if ($order_total['code'] == 'total') {
-                $total_real = $order_total['value'];
+
+            if (in_array($order_total['code'], $taxes_fees)) {
+                $taxes_fees_description .= $order_total['title'] . '/';
+                $taxes_fees_value += $order_total['value'];
             }
-            if ($order_total['code'] == 'tax' ) {
-                $discount_description .= $order_total['title'] . '/';
-                $tax_value += $order_total['value'];
+
+            if ($order_total['code'] == 'total') {
+                $total_value = $order_total['value'];
             }
         }
 
         if ($discount_value > 0) {
             $discount_description = rtrim($discount_description, '/');
             $price = $discount_value * $currency_value;
-            $subtotal -= $price;
 
             $parameters['items'][] = array(
                 'sku' => 'discount',
@@ -139,15 +157,14 @@ class ControllerExtensionPaymentPayPalPlus extends Controller {
             );
         }
 
-        if ($tax_value > 0) {
-            $tax_description = rtrim($tax_description, '/');
-            $price = $tax_value * $currency_value;
-            $subtotal += $price;
+        if ($taxes_fees_value > 0) {
+            $taxes_fees_description = rtrim($taxes_fees_description, '/');
+            $price = $taxes_fees_value * $currency_value;
 
             $parameters['items'][] = array(
-                'sku' => 'tax_rates',
-                'name' => $tax_description,
-                'description' => $tax_description,
+                'sku' => 'taxes',
+                'name' => $taxes_fees_description,
+                'description' => $taxes_fees_description,
                 'quantity' => '1',
                 'price' =>  number_format($price, 2, '.', ''),
                 'url' => ''
@@ -159,50 +176,105 @@ class ControllerExtensionPaymentPayPalPlus extends Controller {
             $shipping = $this->currency->format($shipping, $currency_code, $currency_value, false);
         }
 
-        $has_shipping = $this->cart->hasShipping();
-
-        $custom_document_id = $this->config->get(self::CODE . '_custom_document_id');
-        $custom_number_id = $this->config->get(self::CODE . '_custom_number_id');
-        $custom_complement_id = $this->config->get(self::CODE . '_custom_complement_id');
-
-        $document_column = $this->config->get(self::CODE . '_document_column');
-        $number_payment_column = $this->config->get(self::CODE . '_number_payment_column');
-        $number_shipping_column = $this->config->get(self::CODE . '_number_shipping_column');
-        $complement_payment_column = $this->config->get(self::CODE . '_complement_payment_column');
-        $complement_shipping_column = $this->config->get(self::CODE . '_complement_shipping_column');
-
-        $columns = array();
-        $columns_info = array();
+        if ($total_value > 0) {
+            $total_value = $this->currency->format($total_value, $currency_code, $currency_value, false);
+        }
 
         $fields = $this->fields();
 
-        if (in_array($custom_document_id, $fields) && $custom_document_id == 'C') { array_push($columns, $document_column); }
-        if ($custom_number_id == 'C') { array_push($columns, $number_payment_column); }
-        if ($custom_complement_id == 'C') { array_push($columns, $complement_payment_column); }
-        if ($has_shipping) {
-            if ($custom_number_id == 'C') { array_push($columns, $number_shipping_column); }
-            if ($custom_complement_id == 'C') { array_push($columns, $complement_shipping_column); }
+        $columns = array();
+
+        if ($country_code == 'BR') {
+            $custom_document_id = $this->config->get(self::CODE . '_custom_document_id');
+            $document_column = $this->config->get(self::CODE . '_document_column');
+
+            if (in_array($custom_document_id, $fields) && $custom_document_id == 'C') {
+                array_push($columns, $document_column);
+            }
         }
 
+        $custom_number_id = $this->config->get(self::CODE . '_custom_number_id');
+        $number_payment_column = $this->config->get(self::CODE . '_number_payment_column');
+
+        if ($custom_number_id == 'C') {
+            array_push($columns, $number_payment_column);
+        }
+
+        $custom_complement_id = $this->config->get(self::CODE . '_custom_complement_id');
+        $complement_payment_column = $this->config->get(self::CODE . '_complement_payment_column');
+
+        if ($custom_complement_id == 'C') {
+            array_push($columns, $complement_payment_column);
+        }
+
+        $has_shipping = $this->cart->hasShipping();
+
+        if ($has_shipping) {
+            $number_shipping_column = $this->config->get(self::CODE . '_number_shipping_column');
+
+            if ($custom_number_id == 'C') {
+                array_push($columns, $number_shipping_column);
+            }
+
+            $complement_shipping_column = $this->config->get(self::CODE . '_complement_shipping_column');
+
+            if ($custom_complement_id == 'C') {
+                array_push($columns, $complement_shipping_column);
+            }
+        }
+
+        $columns_info = array();
         if (count($columns)) {
             $columns_info = $this->{self::MODEL}->getOrder($columns, $order_id);
         }
 
-        if (in_array($custom_document_id, $fields)) {
-            $document_number = $this->value_field($order_info['custom_field'], $custom_document_id, $columns_info, $document_column);
-        } else {
-            $document_number = '';
+        $document_number = '';
+        if ($country_code == 'BR') {
+            if (in_array($custom_document_id, $fields)) {
+                $document_number = $this->value_field(
+                    $order_info['custom_field'],
+                    $custom_document_id,
+                    $columns_info,
+                    $document_column
+                );
+            }
         }
 
-        $payment_number = $this->value_field($order_info['payment_custom_field'], $custom_number_id, $columns_info, $number_payment_column);
-        $payment_complement = $this->value_field($order_info['payment_custom_field'], $custom_complement_id, $columns_info, $complement_payment_column);
+        $payment_number = $this->value_field(
+            $order_info['payment_custom_field'],
+            $custom_number_id,
+            $columns_info,
+            $number_payment_column
+        );
 
+        $payment_complement = $this->value_field(
+            $order_info['payment_custom_field'],
+            $custom_complement_id,
+            $columns_info,
+            $complement_payment_column
+        );
+
+        $address_parts = array($order_info['payment_address_1']);
+
+        if (!empty($payment_number)) {
+            array_push($address_parts, $payment_number);
+        }
+
+        if (!empty($payment_complement)) {
+            array_push($address_parts, $payment_complement);
+        }
+
+        if (!empty($order_info['payment_address_2']) && $order_info['payment_address_2'] != $order_info['payment_address_1']) {
+            array_push($address_parts, $order_info['payment_address_2']);
+        }
+
+        $address = implode(" ", $address_parts);
         $postcode = $order_info['payment_postcode'];
-        $address = $order_info['payment_address_1'] . ' ' . $payment_number . ' ' . $payment_complement . ' ' . $order_info['payment_address_2'];
         $city = $order_info['payment_city'];
         $zone = $order_info['payment_zone_code'];
         $country = $order_info['payment_iso_code_2'];
         $prefix = $this->config->get(self::CODE . '_prefix')[$order_info['store_id']] ? $this->config->get(self::CODE . '_prefix')[$order_info['store_id']] : '';
+
         if (!empty($prefix)) {
             $invoice_number = $prefix . '-' . str_pad($order_id, 6, '0', STR_PAD_LEFT);
         } else {
@@ -210,11 +282,36 @@ class ControllerExtensionPaymentPayPalPlus extends Controller {
         }
 
         if ($has_shipping) {
-            $shipping_number = $this->value_field($order_info['shipping_custom_field'], $custom_number_id, $columns_info, $number_shipping_column);
-            $shipping_complement = $this->value_field($order_info['shipping_custom_field'], $custom_complement_id, $columns_info, $complement_shipping_column);
+            $shipping_number = $this->value_field(
+                $order_info['shipping_custom_field'],
+                $custom_number_id,
+                $columns_info,
+                $number_shipping_column
+            );
 
+            $shipping_complement = $this->value_field(
+                $order_info['shipping_custom_field'],
+                $custom_complement_id,
+                $columns_info,
+                $complement_shipping_column
+            );
+
+            $address_parts = array($order_info['shipping_address_1']);
+
+            if (!empty($shipping_number)) {
+                array_push($address_parts, $shipping_number);
+            }
+
+            if (!empty($shipping_complement)) {
+                array_push($address_parts, $shipping_complement);
+            }
+
+            if (!empty($order_info['shipping_address_2']) && $order_info['shipping_address_2'] != $order_info['shipping_address_1']) {
+                array_push($address_parts, $order_info['shipping_address_2']);
+            }
+
+            $address = implode(" ", $address_parts);
             $postcode = $order_info['shipping_postcode'];
-            $address = $order_info['shipping_address_1'] . ' ' . $shipping_number . ' ' . $shipping_complement . ' ' . $order_info['shipping_address_2'];
             $city = $order_info['shipping_city'];
             $zone = $order_info['shipping_zone_code'];
             $country = $order_info['shipping_iso_code_2'];
@@ -226,10 +323,12 @@ class ControllerExtensionPaymentPayPalPlus extends Controller {
 
         $parameters['description'] = $this->config->get(self::CODE . '_description');
         $parameters['invoice_number'] = $invoice_number;
+        $parameters['country_code'] = $country_code;
+        $parameters['currency_code'] = $currency_code;
 
-        $parameters['subtotal'] = substr(number_format($total_real - $shipping, 4, '.', ''), 0, -2)  ;
+        $parameters['subtotal'] = substr(number_format($total_value - $shipping, 4, '.', ''), 0, -2);
         $parameters['shipping'] = number_format($shipping, 2, '.', '');
-        $parameters['total'] = substr( number_format($total_real, 4, '.', '') , 0, -2);
+        $parameters['total'] = substr(number_format($total_value, 4, '.', ''), 0, -2);
 
         $parameters['store_name'] = $store_name;
         $parameters['postcode'] = $postcode;
@@ -249,10 +348,11 @@ class ControllerExtensionPaymentPayPalPlus extends Controller {
             $paypal->setParameters($parameters);
             $response = $paypal->setPayment();
 
-        } catch (Exception $e) {
+        } catch (Error | Exception $e) {
             $this->debug($parameters);
 
             $error = array(
+                $e->getCode(),
                 $e->getMessage()
             );
 
@@ -260,7 +360,6 @@ class ControllerExtensionPaymentPayPalPlus extends Controller {
         }
 
         if (!$error) {
-
             $card_id = $this->{self::MODEL}->getCardId($order_info['customer_id']);
 
             if ($response) {
@@ -336,6 +435,7 @@ class ControllerExtensionPaymentPayPalPlus extends Controller {
             $parameters['sandbox'] = $this->config->get(self::CODE . '_sandbox');
             $parameters['client_id'] = $this->config->get(self::CODE . '_client_id');
             $parameters['client_secret'] = $this->config->get(self::CODE . '_client_secret');
+            $parameters['country_code'] = $this->config->get(self::CODE . '_country');
             $parameters['payment_id'] = $payment_id;
             $parameters['payer_id'] = $payer_id;
 
@@ -347,10 +447,11 @@ class ControllerExtensionPaymentPayPalPlus extends Controller {
                 $paypal->setParameters($parameters);
                 $response = $paypal->setExecute();
 
-            } catch (Exception $e) {
+            } catch (Error | Exception $e) {
                 $this->debug($parameters);
 
                 $error = array(
+                    $e->getCode(),
                     $e->getMessage()
                 );
 
@@ -365,6 +466,7 @@ class ControllerExtensionPaymentPayPalPlus extends Controller {
 
                     if (isset($response->state)) {
                         $order_id = $this->session->data['order_id'];
+
                         $this->load->model('checkout/order');
                         $order_info = $this->model_checkout_order->getOrder($order_id);
 
@@ -404,7 +506,7 @@ class ControllerExtensionPaymentPayPalPlus extends Controller {
                             if ($order_info['order_status_id'] != $order_status_id) {
                                 try {
                                     $this->model_checkout_order->addOrderHistory($order_id, $order_status_id, $comment, true);
-                                } catch (Error $e) {
+                                } catch (Error | Exception $e) {
                                     $error = array(
                                         $e->getMessage()
                                     );
@@ -417,14 +519,14 @@ class ControllerExtensionPaymentPayPalPlus extends Controller {
                                 $json['redirect'] = $this->url->link('checkout/success', '', true);
                             }
                         }
-                    } else if (isset($response->name)) {
+                    } elseif (isset($response->name)) {
                         $error_name = $response->name;
 
                         if ($error_name == 'INTERNAL_SERVICE_ERROR') {
                             $error_message = $this->language->get('error_api');
-                        } else if ($error_name == 'VALIDATION_ERROR') {
+                        } elseif ($error_name == 'VALIDATION_ERROR') {
                             $error_message = $this->language->get('error_order');
-                        } else if ($error_name == 'INSTRUMENT_DECLINED') {
+                        } elseif ($error_name == 'INSTRUMENT_DECLINED') {
                             $error_message = $this->language->get('error_card_issuer');
                         } else {
                             $error_message = $this->language->get('error_paypal');
@@ -451,6 +553,7 @@ class ControllerExtensionPaymentPayPalPlus extends Controller {
             $parameters['sandbox'] = $this->config->get(self::CODE . '_sandbox');
             $parameters['client_id'] = $this->config->get(self::CODE . '_client_id');
             $parameters['client_secret'] = $this->config->get(self::CODE . '_client_secret');
+            $parameters['country_code'] = $this->config->get(self::CODE . '_country');
             $parameters['payment_id'] = $payment_id;
             $parameters['payer_id'] = $payer_id;
 
@@ -462,10 +565,11 @@ class ControllerExtensionPaymentPayPalPlus extends Controller {
                 $paypal->setParameters($parameters);
                 $response = $paypal->getSearch();
 
-            } catch (Exception $e) {
+            } catch (Error | Exception $e) {
                 $this->debug($parameters);
 
                 $error = array(
+                    $e->getCode(),
                     $e->getMessage()
                 );
 
@@ -480,6 +584,7 @@ class ControllerExtensionPaymentPayPalPlus extends Controller {
 
                     if (isset($response->state)) {
                         $order_id = $this->session->data['order_id'];
+
                         $this->load->model('checkout/order');
                         $order_info = $this->model_checkout_order->getOrder($order_id);
 
@@ -517,7 +622,7 @@ class ControllerExtensionPaymentPayPalPlus extends Controller {
                             if ($order_info['order_status_id'] != $order_status_id) {
                                 try {
                                     $this->model_checkout_order->addOrderHistory($order_id, $order_status_id, $comment, true);
-                                } catch (Error $e) {
+                                } catch (Error | Exception $e) {
                                     $error = array(
                                         $e->getMessage()
                                     );
@@ -530,14 +635,14 @@ class ControllerExtensionPaymentPayPalPlus extends Controller {
                                 $json['redirect'] = $this->url->link('checkout/success', '', true);
                             }
                         }
-                    } else if (isset($response->name)) {
+                    } elseif (isset($response->name)) {
                         $error_name = $response->name;
 
                         if ($error_name == 'INTERNAL_SERVICE_ERROR') {
                             $error_message = $this->language->get('error_api');
-                        } else if ($error_name == 'VALIDATION_ERROR') {
+                        } elseif ($error_name == 'VALIDATION_ERROR') {
                             $error_message = $this->language->get('error_order');
-                        } else if ($error_name == 'INSTRUMENT_DECLINED') {
+                        } elseif ($error_name == 'INSTRUMENT_DECLINED') {
                             $error_message = $this->language->get('error_card_issuer');
                         } else {
                             $error_message = $this->language->get('error_paypal');
@@ -572,7 +677,7 @@ class ControllerExtensionPaymentPayPalPlus extends Controller {
         $webhook_id = $this->config->get(self::CODE . '_webhook_id');
 
         if (empty($webhook_id)) {
-            $this->debug('Webhook Error: O ID do Webhook não foi informado pela loja.');
+            $this->debug($this->language->get('log_webhook_id_invalid'));
 
             return;
         }
@@ -606,38 +711,44 @@ class ControllerExtensionPaymentPayPalPlus extends Controller {
         switch ($body_data['event_type']) {
             case 'PAYMENT.SALE.COMPLETED':
                 $status = 'completed';
+
                 break;
             case 'PAYMENT.SALE.DENIED':
                 $status = 'denied';
                 $force_update = true;
+
                 break;
             case 'PAYMENT.SALE.REFUNDED':
                 $status = 'refunded';
                 $force_update = true;
                 $sale_id = $body_data['resource']['sale_id'];
+
                 break;
             case 'PAYMENT.SALE.REVERSED':
                 $status = 'reversed';
                 $force_update = true;
+
                 break;
             case 'PAYMENT.SALE.PENDING':
                 $status = 'pending';
+
                 break;
             case 'CUSTOMER.DISPUTE.CREATED':
                 $status = 'dispute';
                 $force_update = true;
                 $sale_id = $body_data['resource']['disputed_transactions'][0]['seller_transaction_id'];
+
                 break;
         }
 
         if (empty($status)) {
-            $this->debug('Webhook Error: O evento notificado não foi autorizado.');
+            $this->debug($this->language->get('log_status_empty'));
 
             return;
         }
 
         if (empty($sale_id)) {
-            $this->debug('Webhook Error: Não foi possível mapear o ID da transação notificada.');
+            $this->debug($this->language->get('log_sale_id_empty'));
 
             return;
         }
@@ -646,7 +757,7 @@ class ControllerExtensionPaymentPayPalPlus extends Controller {
         $transaction = $this->{self::MODEL}->getTransactionByWebhooks($sale_id);
 
         if (!isset($transaction['order_id'])) {
-            $this->debug('Webhook Error: Não foi possível localizar na loja um pedido vinculado ao ID da transação.');
+            $this->debug($this->language->get('log_order_id_empty'));
 
             return;
         }
@@ -672,6 +783,7 @@ class ControllerExtensionPaymentPayPalPlus extends Controller {
         foreach ($order_history as $history) {
             if ($history['current_order_status_id'] == $new_order_status_id) {
                 $update_order_history = false;
+
                 break;
             }
 
@@ -680,6 +792,7 @@ class ControllerExtensionPaymentPayPalPlus extends Controller {
                 $force_update == false
             ) {
                 $update_order_history = false;
+
                 break;
             }
         }
@@ -689,7 +802,7 @@ class ControllerExtensionPaymentPayPalPlus extends Controller {
 
             try {
                 $this->model_checkout_order->addOrderHistory($order_id, $new_order_status_id, '', true);
-            } catch (Error $e) {
+            } catch (Error | Exception $e) {
                 $error = array(
                     $e->getMessage()
                 );
@@ -698,7 +811,7 @@ class ControllerExtensionPaymentPayPalPlus extends Controller {
             }
         }
 
-        $this->debug('O Webhook foi processado com sucesso.');
+        $this->debug($this->language->get('log_success'));
     }
 
     private function getWebhookHeaders() {
@@ -739,7 +852,7 @@ class ControllerExtensionPaymentPayPalPlus extends Controller {
                 $this->debug(implode(PHP_EOL, array('Webhook Header:', print_r($all_headers, true), )));
             }
 
-            $this->debug('Webhook Error: O header não contém os valores esperados.');
+            $this->debug($this->language->get('log_header_invalid'));
 
             return;
         }
@@ -751,7 +864,7 @@ class ControllerExtensionPaymentPayPalPlus extends Controller {
         $this->debug(implode(PHP_EOL, array('Webhook Body:', $body)));
 
         if (empty($body)) {
-            $this->debug('Webhook Error: O body está vazio.');
+            $this->debug($this->language->get('log_body_empty'));
 
             return;
         }
@@ -765,7 +878,7 @@ class ControllerExtensionPaymentPayPalPlus extends Controller {
         ) {
             return $body;
         } else {
-            $this->debug('Webhook Error: O body não contém os dados esperados para atualização do pedido.');
+            $this->debug($this->language->get('log_body_invalid'));
 
             return;
         }
@@ -775,6 +888,7 @@ class ControllerExtensionPaymentPayPalPlus extends Controller {
         $parameters['sandbox'] = $this->config->get(self::CODE . '_sandbox');
         $parameters['client_id'] = $this->config->get(self::CODE . '_client_id');
         $parameters['client_secret'] = $this->config->get(self::CODE . '_client_secret');
+        $parameters['country_code'] = $this->config->get(self::CODE . '_country');
         $parameters['method'] = 'POST';
         $parameters['endpoint'] = 'verify-webhook-signature';
         $parameters['json'] = $json;
@@ -789,7 +903,7 @@ class ControllerExtensionPaymentPayPalPlus extends Controller {
                 isset($response->verification_status) &&
                 $response->verification_status == 'SUCCESS'
             ) {
-                $this->debug('A assinatura do Webhook foi confirmada.');
+                $this->debug($this->language->get('log_signature_success'));
 
                 return true;
             } else {
@@ -797,12 +911,13 @@ class ControllerExtensionPaymentPayPalPlus extends Controller {
 
                 $this->debug('Webhook Verify:' . PHP_EOL . json_encode($response, JSON_PRETTY_PRINT));
 
-                $this->debug('Webhook Error: A verificação da assinatura falhou.');
+                $this->debug($this->language->get('log_signature_fail'));
             }
-        } catch (Exception $e) {
+        } catch (Error | Exception $e) {
             $this->debug($parameters);
 
             $error = array(
+                $e->getCode(),
                 $e->getMessage()
             );
 
@@ -819,7 +934,7 @@ class ControllerExtensionPaymentPayPalPlus extends Controller {
             $this->load->model('account/customer');
             $customer_info = $this->model_account_customer->getCustomer($this->customer->getId());
             $order_data['custom_field'] = json_decode($customer_info['custom_field'], true);
-        } else if (isset($this->session->data['guest'])) {
+        } elseif (isset($this->session->data['guest'])) {
             $order_data['custom_field'] = $this->session->data['guest']['custom_field'];
         }
 
@@ -862,7 +977,7 @@ class ControllerExtensionPaymentPayPalPlus extends Controller {
             if (isset($collumn_data[$field_collumn]) && !empty($collumn_data[$field_collumn])) {
                 $field_value = $collumn_data[$field_collumn];
             }
-        } else if (!empty($field_key) && is_array($custom_data)) {
+        } elseif (!empty($field_key) && is_array($custom_data)) {
             foreach ($custom_data as $key => $value) {
                 if ($field_key == $key) { $field_value = $value; }
             }
@@ -876,19 +991,25 @@ class ControllerExtensionPaymentPayPalPlus extends Controller {
 
         $this->update_order();
 
-        $custom_document_id = $this->config->get(self::CODE . '_custom_document_id');
-        $custom_number_id = $this->config->get(self::CODE . '_custom_number_id');
+        $country_code = $this->config->get(self::CODE . '_country');
 
-        $document_column = $this->config->get(self::CODE . '_document_column');
-        $number_column = $this->config->get(self::CODE . '_number_payment_column');
+        if ($country_code == 'BR') {
+            $custom_document_id = $this->config->get(self::CODE . '_custom_document_id');
+            $document_column = $this->config->get(self::CODE . '_document_column');
+
+            $custom_number_id = $this->config->get(self::CODE . '_custom_number_id');
+            $number_column = $this->config->get(self::CODE . '_number_payment_column');
+        }
 
         $columns = array();
         $columns_info = array();
 
         $fields = $this->fields();
 
-        if (in_array($custom_document_id, $fields) && $custom_document_id == 'C') { array_push($columns, $document_column); }
-        if ($custom_number_id == 'C') { array_push($columns, $number_column); }
+        if ($country_code == 'BR') {
+            if (in_array($custom_document_id, $fields) && $custom_document_id == 'C') { array_push($columns, $document_column); }
+            if ($custom_number_id == 'C') { array_push($columns, $number_column); }
+        }
 
         $order_id = $this->session->data['order_id'];
 
@@ -907,39 +1028,51 @@ class ControllerExtensionPaymentPayPalPlus extends Controller {
             $errors[] = $this->language->get('error_customer');
         }
 
-        $document = $this->value_field($order_info['custom_field'], $custom_document_id, $columns_info, $document_column);
+        if ($country_code == 'BR') {
+            $document = $this->value_field($order_info['custom_field'], $custom_document_id, $columns_info, $document_column);
 
-        $document = preg_replace("/[^0-9]/", '', $document);
-        $document = strlen($document);
-        if ($document == 14 || $document == 11) {
+            $document = preg_replace("/[^0-9]/", '', $document);
+            $document = strlen($document);
+            if ($document == 14 || $document == 11) {
+            } else {
+                $errors[] = $this->language->get('error_document');
+            }
+
+            $telephone = strlen(preg_replace("/[^0-9]/", '', trim($order_info['telephone'])));
+            if ($telephone < 10 || $telephone > 11) {
+                $errors[] = $this->language->get('error_telephone');
+            }
+
+            $number = $this->value_field($order_info['payment_custom_field'], $custom_number_id, $columns_info, $number_column);
+            $number = preg_replace("/[^0-9]/", '', $number);
+            if (strlen($number) < 1) {
+                $errors[] = $this->language->get('error_payment_number');
+            }
+
+            $payment_address_2 = trim($order_info['payment_address_2']);
+            if (empty($payment_address_2)) {
+                $errors[] = $this->language->get('error_payment_address_2');
+            }
+
+            $payment_postcode = preg_replace("/[^0-9]/", '', trim($order_info['payment_postcode']));
+            if (strlen($payment_postcode) != 8) {
+                $errors[] = $this->language->get('error_payment_postcode');
+            }
         } else {
-            $errors[] = $this->language->get('error_document');
-        }
+            $telephone = preg_replace("/[^0-9]/", '', trim($order_info['telephone']));
+            if (empty($telephone)) {
+                $errors[] = $this->language->get('error_telephone');
+            }
 
-        $telephone = strlen(preg_replace("/[^0-9]/", '', trim($order_info['telephone'])));
-        if ($telephone < 10 || $telephone > 11) {
-            $errors[] = $this->language->get('error_telephone');
-        }
-
-        $payment_postcode = preg_replace("/[^0-9]/", '', trim($order_info['payment_postcode']));
-        if (strlen($payment_postcode) != 8) {
-            $errors[] = $this->language->get('error_payment_postcode');
+            $payment_postcode = preg_replace("/[^0-9]/", '', trim($order_info['payment_postcode']));
+            if (empty($payment_postcode)) {
+                $errors[] = $this->language->get('error_payment_postcode');
+            }
         }
 
         $payment_address_1 = trim($order_info['payment_address_1']);
         if (empty($payment_address_1)) {
             $errors[] = $this->language->get('error_payment_address_1');
-        }
-
-        $number = $this->value_field($order_info['payment_custom_field'], $custom_number_id, $columns_info, $number_column);
-        $number = preg_replace("/[^0-9]/", '', $number);
-        if (strlen($number) < 1) {
-            $errors['number'] = $this->language->get('error_payment_number');
-        }
-
-        $payment_address_2 = trim($order_info['payment_address_2']);
-        if (empty($payment_address_2)) {
-            $errors[] = $this->language->get('error_payment_address_2');
         }
 
         $payment_city = trim($order_info['payment_city']);

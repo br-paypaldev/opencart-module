@@ -24,7 +24,7 @@ class ModelPaymentPayPalPlus extends Model {
             $status = false;
         }
 
-        $currencies = array('BRL');
+        $currencies = array('BRL', 'MXN', 'USD');
         if (version_compare(VERSION, '2.2') < 0) {
             $currency_code = $this->currency->getCode();
         } else {

@@ -1,9 +1,10 @@
 <?php
 // Heading
-$_['heading_title']         = 'Transações PayPal Plus';
+$_['heading_title']         = 'Transações';
 
 // Text
 $_['text_list']             = 'Listagem de transações';
+$_['text_paypal_plus']      = 'PayPal Plus';
 $_['text_all']              = 'Todos';
 $_['text_pending']          = 'Pendente';
 $_['text_analyze']          = 'Em análise';

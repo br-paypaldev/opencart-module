@@ -1,20 +1,20 @@
 <?php
 // Heading
-$_['heading_title']    = 'Log de informações PayPal Plus';
+$_['heading_title']    = 'Information log';
 
 // Text
-$_['text_success']     = 'O log foi apagado!';
+$_['text_success']     = 'Log has been cleared!';
 $_['text_paypal_plus'] = 'PayPal Plus';
-$_['text_list']        = 'Listando o log';
+$_['text_list']        = 'Listing log';
 
 // Button
-$_['button_download']  = 'Download do log filtrado';
-$_['button_clear']     = 'Excluir logs';
+$_['button_download']  = 'Download filtered log';
+$_['button_clear']     = 'Delete logs';
 
 // Entry
-$_['entry_filter']     = 'Filtre o log pela data:';
+$_['entry_filter']     = 'Filter log by date:';
 
 // Error
-$_['error_warning']    = 'Atenção: O arquivo %s possui o tamanho de %s!';
-$_['error_empty']      = 'Atenção: O arquivo de log está vazio!';
-$_['error_permission'] = 'Atenção: Você não tem permissão para limpar este log!';
+$_['error_warning']    = 'Warning! File %s has the size of %s!';
+$_['error_empty']      = 'Warning! Log file is empty!';
+$_['error_permission'] = 'Warning! You do not have permission to clear this log!';

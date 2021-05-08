@@ -47,6 +47,9 @@ class ControllerPaymentPayPalPlus extends Controller {
 
         $data['version'] = $this->getPayPalPlusVersion();
 
+        $latest_version = $this->getPayPalPlusUpgrade();
+        $data['upgrade'] = $latest_version ? sprintf($this->language->get('text_upgrade'), $latest_version) : '';
+
         $data['token'] = $this->session->data['token'];
 
         $errors = array(
@@ -56,6 +59,8 @@ class ControllerPaymentPayPalPlus extends Controller {
             'prefix',
             'client_id',
             'client_secret',
+            'custom_document_id',
+            'custom_number_id',
             'document',
             'number_payment',
             'number_shipping',
@@ -105,13 +110,14 @@ class ControllerPaymentPayPalPlus extends Controller {
             'customer_groups' => array(0),
             'total' => '',
             'geo_zone_id' => '',
-            'status' => '',
+            'status' => '1',
             'sort_order' => '',
             'stores' => array(0),
             'prefix' => '',
             'client_id' => '',
             'client_secret' => '',
             'sandbox' => '',
+            'country' => '',
             'debug' => '',
             'save_card' => '',
             'description' => '',
@@ -141,8 +147,7 @@ class ControllerPaymentPayPalPlus extends Controller {
             if (isset($this->request->post[$key])) {
                 $data[$key] = $this->request->post[$key];
             } else {
-                $value = ($this->config->get(self::CODE . '_' . $key)) ? $this->config->get(self::CODE . '_' . $key) : $value;
-                $data[$key] = $value;
+                $data[$key] = !is_null($this->config->get(self::CODE . '_' . $key)) ? $this->config->get(self::CODE . '_' . $key) : $value;
             }
         }
 
@@ -166,7 +171,13 @@ class ControllerPaymentPayPalPlus extends Controller {
         $this->load->model('setting/store');
         $data['stores_data'] = $this->model_setting_store->getStores();
 
-        if ($data['prefix']!='') {
+        $data['countries'] = array(
+            'BR' => $this->language->get('text_brazil'),
+            'MX' => $this->language->get('text_mexico'),
+            'US' => $this->language->get('text_united_states')
+        );
+
+        if ($data['prefix'] != '') {
             foreach ($data['prefix'] as $key => $value) {
                 $data['new_prefix'][$key] = $value;
             }
@@ -349,6 +360,7 @@ class ControllerPaymentPayPalPlus extends Controller {
         $parameters['sandbox'] = $this->config->get(self::CODE . '_sandbox');
         $parameters['client_id'] = $this->config->get(self::CODE . '_client_id');
         $parameters['client_secret'] = $this->config->get(self::CODE . '_client_secret');
+        $parameters['country_code'] = $this->config->get(self::CODE . '_country');
         $parameters['method'] = $method;
         $parameters['endpoint'] = $endpoint;
         $parameters['json'] = $json;
@@ -360,7 +372,7 @@ class ControllerPaymentPayPalPlus extends Controller {
             $paypal = new PayPalPlus();
             $paypal->setParameters($parameters);
             $response = $paypal->changeWebhook();
-        } catch (Exception $e) {
+        } catch (Error | Exception $e) {
             $error = array(
                 $e->getMessage()
             );
@@ -405,21 +417,19 @@ class ControllerPaymentPayPalPlus extends Controller {
             'button_text'
         );
 
+        if ($this->request->post['country'] == 'BR') {
+            array_push($errors, array('custom_document_id', 'custom_number_id'));
+        }
+
         foreach ($errors as $error) {
             if (!(trim($this->request->post[$error]))) {
                 $this->error[$error] = $this->language->get('error_required');
             }
         }
 
-        $errors_field = array(
-            'document'
-        );
-
-        foreach ($errors_field as $error) {
-            if ($this->request->post['custom_' . $error . '_id'] == 'C') {
-                if (!(trim($this->request->post[$error . '_column']))) {
-                    $this->error[$error] = $this->language->get('error_field_column');
-                }
+        if ($this->request->post['custom_document_id'] == 'C') {
+            if (!(trim($this->request->post['document_column']))) {
+                $this->error['document'] = $this->language->get('error_field_column');
             }
         }
 

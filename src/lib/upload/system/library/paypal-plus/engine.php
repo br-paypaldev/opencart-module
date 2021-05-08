@@ -2,25 +2,25 @@
 trait PayPalPlusEngine
 {
     /*
-    * Versão atual da extensão.
+    * Current version of extension.
     */
-    private static $version = '1.0.0';
+    private static $paypal_plus_version = '1.1.0';
 
     /*
-    * URL do repositório no Github.
+    * Github repository URL.
     */
-    private static $repository = 'https://api.github.com/repos/br-paypaldev/opencart-module/releases/latest';
+    private static $repository = 'https://api.github.com/repos/br-paypaldev/opencart-module/tags';
 
     /*
-    * Retorna a versão atual da extensão.
+    * Returns current version of extension.
     */
     public function getPayPalPlusVersion()
     {
-        return self::$version;
+        return self::$paypal_plus_version;
     }
 
     /*
-    * Retorna um array com erros dos requisitos.
+    * Returns array with requirements errors.
     */
     public function getPayPalPlusRequirements()
     {
@@ -28,8 +28,8 @@ trait PayPalPlusEngine
     }
 
     /*
-    * Verifica se há upgrade para a extensão.
-    * Retorna false ou a última versão.
+    * Check if extension upgrade.
+    * Returns false or the latest version.
     */
     public function getPayPalPlusUpgrade()
     {
@@ -43,78 +43,72 @@ trait PayPalPlusEngine
     }
 
     /*
-    * Executa a análise de requisitos.
-    * Retorna um array vazio ou com erros.
+    * Performs requirements analysis.
+    * Returns empty or error array.
     */
     private function checkPayPalPlusRequirements()
     {
         $alerts = [];
 
         if (phpversion() < '7.3') {
-            $alerts[] = 'Deve ser utilizado no mínimo PHP 7.3.';
+            $alerts[] = 'At least PHP 7.3 must be used.';
         }
 
         if (!extension_loaded('curl')) {
-            $alerts[] = 'A extensão cURL do PHP precisa ser habilitada.';
+            $alerts[] = 'PHP cURL extension needs to be enabled.';
         }
 
         if (!extension_loaded('json')) {
-            $alerts[] = 'A extensão json do PHP precisa ser habilitada.';
+            $alerts[] = 'PHP json extension needs to be enabled.';
         }
 
         if (!extension_loaded('mbstring')) {
-            $alerts[] = 'A extensão mbstring do PHP precisa ser habilitada.';
+            $alerts[] = 'PHP mbstring extension needs to be enabled.';
         }
 
         if (!class_exists('DateTime')) {
-            $alerts[] = 'A classe DateTime do PHP precisa ser habilitada.';
+            $alerts[] = 'PHP DateTime class needs to be enabled.';
         }
 
         if (!function_exists('json_encode')) {
-            $alerts[] = 'A função json_encode do PHP precisa ser habilitada.';
+            $alerts[] = 'PHP json_encode function needs to be enabled.';
         }
 
         if (!function_exists('json_decode')) {
-            $alerts[] = 'A função json_decode do PHP precisa ser habilitada.';
+            $alerts[] = 'PHP json_decode function needs to be enabled.';
         }
 
         return $alerts;
     }
 
     /*
-    * Conecta no repositório do Github.
-    * Retorna false ou o número da versão.
+    * Connect to Github repository.
+    * Returns false or the version number.
     */
     private function checkPayPalPlusLatestVersion() {
-        if (!self::$repository)
+        if (!self::$repository) {
             return false;
-
-        try {
-            $ch = curl_init();
-            curl_setopt($ch, CURLOPT_URL, self::$repository);
-            curl_setopt($ch, CURLOPT_HEADER, 0);
-            curl_setopt($ch, CURLOPT_USERAGENT, "curl");
-
-            ob_start();
-            curl_exec($ch);
-            curl_close($ch);
-            $lines = ob_get_contents();
-            ob_end_clean();
-            $json = json_decode($lines, true);
-
-            if (!$json || !isset($json['tag_name'])) {
-                return false;
-            }
-
-            $version = $json['tag_name'];
-
-            return (substr($version, 0, 1) == 'v') ? substr($version, 1) : false;
-        } catch (Error $e) {
-            if ($this->logger === null) {
-                $this->logger = new Log('paypal_plus_' . date('Y-m-d') . '.log');
-            }
-
-            $this->logger->write($e->getMessage());
         }
+
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, self::$repository);
+        curl_setopt($ch, CURLOPT_HEADER, 0);
+        curl_setopt($ch, CURLOPT_USERAGENT, "curl");
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 3);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 6);
+
+        ob_start();
+        curl_exec($ch);
+        curl_close($ch);
+
+        $lines = ob_get_contents();
+        ob_end_clean();
+        $json = json_decode($lines, true);
+
+        if (!$json || !isset($json[0]['name'])) {
+            return false;
+        }
+
+        return $json[0]['name'];
     }
 }

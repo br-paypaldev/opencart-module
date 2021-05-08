@@ -5,7 +5,11 @@
       <h1><?php echo $heading_title; ?></h1>
       <ul class="breadcrumb">
         <?php foreach ($breadcrumbs as $breadcrumb) { ?>
-        <li><a href="<?php echo $breadcrumb['href']; ?>"><?php echo $breadcrumb['text']; ?></a></li>
+        <?php if ($breadcrumb['href']) { ?>
+        <li><a href="<?php echo $breadcrumb['href']?>"><?php echo $breadcrumb['text']?></a></li>
+        <?php } else { ?>
+        <li><?php echo $breadcrumb['text']?></li>
+        <?php } ?>
         <?php } ?>
       </ul>
     </div>
@@ -166,9 +170,9 @@
     </div>
   </div>
   <script src="//cdnjs.cloudflare.com/ajax/libs/bootbox.js/4.4.0/bootbox.min.js"></script>
-  <script type="text/javascript"><!--
+  <script type="text/javascript">
     $('.date').datetimepicker({
-      language: 'pt-br',
+      language: '<?php echo $calendar_language; ?>',
       pickTime: false,
       format: 'YYYY-MM-DD'
     });
@@ -179,7 +183,7 @@
         "columnDefs": [ {"targets": 6, "searchable": false, "orderable": false} ],
         "deferRender": true,
         "language": {
-          "url": "//cdn.datatables.net/plug-ins/1.10.21/i18n/Portuguese-Brasil.json"
+          "url": "<?php echo $datatables_language; ?>"
         },
         "dom": 'Bfrtip',
         "buttons": [
@@ -418,7 +422,7 @@
 
       location.href = filter_url.replace(/&amp;/g, '&');
     });
-  //--></script>
+  </script>
   <style>
     pre {
       max-height: 350px;

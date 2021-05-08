@@ -2,11 +2,11 @@
 /**
  * Class PayPal Plus
  *
- * Class para comunicação com a API PayPal Plus
+ * Class for PayPal Plus API
  * @package PayPal Plus
- * @author PayPal Brasil
- * @version 1.0.0
- * @copyright Copyright (c) PayPal Brasil
+ * @author PayPal Brazil
+ * @version 1.1.0
+ * @copyright Copyright (c) PayPal Brazil
  * @link https://www.paypal.com/br/
  */
 final class PayPalPlus
@@ -70,7 +70,7 @@ final class PayPalPlus
     }
 
     /**
-     * Parâmetros esperados pelo request
+     * Set parameters for request
      *
      * @param array $data
      * @return void
@@ -80,7 +80,7 @@ final class PayPalPlus
     }
 
     /**
-     * Endpoint para comunicação com a API
+     * Set API Endpoint URL
      *
      * @return void
      */
@@ -93,7 +93,7 @@ final class PayPalPlus
     }
 
     /**
-     * Verifica se o ambiente é o sandbox
+     * Check if sandbox enabled
      *
      * @return bool
      */
@@ -106,7 +106,7 @@ final class PayPalPlus
     }
 
     /**
-     * Captura o tipo de conteúdo utilizado na comunicação com a API
+     * Get content type
      *
      * @return string
      */
@@ -115,7 +115,7 @@ final class PayPalPlus
     }
 
     /**
-     * Captura o tipo de autorização utilizada na comunicação com a API
+     * Get authorization header
      *
      * @return string
      */
@@ -124,7 +124,7 @@ final class PayPalPlus
     }
 
     /**
-     * Captura a URL para o recurso utilizado na comunicação com a API
+     * Get API resource
      *
      * @return string
      */
@@ -133,22 +133,31 @@ final class PayPalPlus
     }
 
     /**
-     * Captura o cabeçalho utilizado na comunicação com a API
+     * Get API headers
      *
      * @return array
      */
     public function getHeaders() {
+        $paypal_partner_attribution_id = 'OpenCartBrazil_Ecom_PPPlus';
+
+        if (
+            isset($this->_parameter['country_code'])
+            && $this->_parameter['country_code'] == 'MX'
+        ) {
+            $paypal_partner_attribution_id = 'OpenCartMexico_Cart_PP';
+        }
+
         $headers = [];
         $headers[] = 'Accept: application/json';
         $headers[] = 'Content-type: ' . $this->getContentType();
         $headers[] = $this->getAuthorization();
-        $headers[] = 'PayPal-Partner-Attribution-Id: OpenCartBrazil_Ecom_PPPlus';
+        $headers[] = 'PayPal-Partner-Attribution-Id: ' . $paypal_partner_attribution_id;
 
         return $headers;
     }
 
     /**
-     * Captura o método utilizado na comunicação com a API
+     * Get API method
      *
      * @return string
      */
@@ -157,7 +166,7 @@ final class PayPalPlus
     }
 
     /**
-     * Captura o request utilizado na comunicação com a API
+     * Get API request
      *
      * @return string|bool
      */
@@ -170,7 +179,7 @@ final class PayPalPlus
     }
 
     /**
-     * Captura o response retornado na comunicação com a API
+     * Get API response
      *
      * @return string
      */
@@ -179,7 +188,7 @@ final class PayPalPlus
     }
 
     /**
-     * Captura o HTTP Status Code retornado na comunicação com a API
+     * Get API HTTP Status Code
      *
      * @return string
      */
@@ -192,10 +201,10 @@ final class PayPalPlus
      * @return object
      */
     public function changeWebhook() {
-        $inputs = ['sandbox', 'client_id', 'client_secret', 'method', 'endpoint', 'json'];
+        $inputs = ['sandbox', 'client_id', 'client_secret', 'country_code', 'method', 'endpoint', 'json'];
         $parameters = $this->validateParameters($inputs);
         if ($parameters == false) {
-            throw new \Exception('Erro 412 (Precondition Failed). O parâmetro ' . $this->_input . ' não foi enviado para executar a consulta por webhooks.');
+            throw new \Exception('Erro 412 (Precondition Failed). The parameter ' . $this->_input . ' was not sent to perform the query via webhooks.');
         }
 
         $method = trim($this->_parameter['method']);
@@ -216,15 +225,39 @@ final class PayPalPlus
      * @return object
      */
     public function setPayment() {
-        $inputs = ['sandbox', 'client_id', 'client_secret', 'store_name', 'description', 'subtotal', 'shipping', 'total', 'postcode', 'address', 'city', 'zone', 'country', 'return_url', 'cancel_url'];
+        $inputs = ['sandbox', 'client_id', 'client_secret', 'store_name', 'description', 'invoice_number', 'country_code', 'currency_code', 'subtotal', 'shipping', 'total', 'postcode', 'address', 'city', 'zone', 'country', 'return_url', 'cancel_url'];
         $parameters = $this->validateParameters($inputs);
         if ($parameters == false) {
-            throw new \Exception('Erro 412 (Precondition Failed). O parâmetro ' . $this->_input . ' não foi enviado para iniciar o pagamento no PayPal.');
+            throw new \Exception('Erro 412 (Precondition Failed). The parameter ' . $this->_input . ' was not sent to initiate payment on PayPal.');
         }
 
         $store_name = html_entity_decode($this->utf8_substr($this->_parameter['store_name'], 0, 126));
         $description = html_entity_decode($this->utf8_substr($this->_parameter['description'], 0, 127));
+
         $invoice_number = html_entity_decode($this->utf8_substr($this->_parameter['invoice_number'], 0, 126));
+        if ($invoice_number == '') {
+            throw new \Exception('Erro 412 (Precondition Failed). The invoice_number has not been set.');
+        }
+
+        $country_code = trim($this->_parameter['country_code']);
+        $countries = ['BR','MX','US'];
+        if (!in_array($country_code, $countries)) {
+            throw new \Exception('Erro 412 (Precondition Failed). Country code is not supported.');
+        }
+
+        if ($country_code == 'BR') {
+            $locale = 'pt_BR';
+        } elseif ($country_code == 'MX') {
+            $locale = 'es_MX';
+        } elseif ($country_code == 'US') {
+            $locale = 'en_US';
+        }
+
+        $currency_code = trim($this->_parameter['currency_code']);
+        $currencies = ['BRL','MXN','USD'];
+        if (!in_array($currency_code, $currencies)) {
+            throw new \Exception('Erro 412 (Precondition Failed). Currency code  is not supported.');
+        }
 
         $items = [];
         if (isset($this->_parameter['items'])) {
@@ -243,7 +276,7 @@ final class PayPalPlus
                             'description' => $description,
                             'quantity' => $quantity,
                             'price' => $price,
-                            'currency' => 'BRL',
+                            'currency' => $currency_code,
                             'sku' => $sku
                         ];
                     } else {
@@ -252,48 +285,48 @@ final class PayPalPlus
                             'description' => $description,
                             'quantity' => $quantity,
                             'price' => $price,
-                            'currency' => 'BRL',
+                            'currency' => $currency_code,
                             'sku' => $sku,
                             'url' => $url
                         ];
                     }
                 }
             } else {
-                throw new \Exception('Erro 412 (Precondition Failed). Os itens do carrinho não são válidos.');
+                throw new \Exception('Erro 412 (Precondition Failed). Cart items are not valid. ');
             }
         } else {
-            throw new \Exception('Erro 412 (Precondition Failed). Os itens do carrinho não foram informados.');
+            throw new \Exception('Erro 412 (Precondition Failed). Cart items have not been reported.');
         }
 
         $subtotal = $this->_parameter['subtotal'];
         if ($subtotal <= 0) {
-            throw new \Exception('Erro 412 (Precondition Failed). O subtotal do pedido não pode ser menor ou igual a zero.');
+            throw new \Exception('Erro 412 (Precondition Failed). Order subtotal cannot be less than or equal to zero.');
         }
 
         $shipping = $this->_parameter['shipping'];
         if ($shipping < 0) {
-            throw new \Exception('Erro 412 (Precondition Failed). O valor do frete não pode ser negativo.');
+            throw new \Exception('Erro 412 (Precondition Failed). Shipping value cannot be negative.');
         }
 
         $total = $this->_parameter['total'];
         if ($total <= 0) {
-            throw new \Exception('Erro 412 (Precondition Failed). O total do pedido não pode ser menor ou igual a zero.');
+            throw new \Exception('Erro 412 (Precondition Failed). Order total cannot be less than or equal to zero.');
         }
 
         $postal_code = substr(preg_replace("/[^0-9]/", '', $this->_parameter['postcode']), 0, 8);
         $line1 = html_entity_decode($this->utf8_substr($this->_parameter['address'], 0, 100));
         $city = html_entity_decode($this->utf8_substr($this->_parameter['city'], 0, 64));
         $state = html_entity_decode($this->utf8_substr($this->_parameter['zone'], 0, 40));
-        $country_code = html_entity_decode($this->utf8_substr($this->_parameter['country'], 0, 2));
+        $country = html_entity_decode($this->utf8_substr($this->_parameter['country'], 0, 2));
 
         $return_url = preg_replace('/[^A-Za-z0-9-:_?=.\/]/', '', $this->_parameter['return_url']);
         if (($return_url == '') || (strlen($return_url) > 600)) {
-            throw new \Exception('Erro 412 (Precondition Failed). A URL para retorno do pagamento não é válida.');
+            throw new \Exception('Erro 412 (Precondition Failed). The payment return URL is not valid.');
         }
 
         $cancel_url = preg_replace('/[^A-Za-z0-9-:_?=.\/]/', '', $this->_parameter['cancel_url']);
         if (($cancel_url == '') || (strlen($cancel_url) > 600)) {
-            throw new \Exception('Erro 412 (Precondition Failed). A URL para pagamento cancelado não é válida.');
+            throw new \Exception('Erro 412 (Precondition Failed). The URL for canceled payment is not valid.');
         }
 
         $this->_authorization = 'Authorization: Bearer ' . $this->getToken();
@@ -307,13 +340,13 @@ final class PayPalPlus
             ],
             'application_context' => [
                 'brand_name' => $store_name,
-                'locale' => 'pt_BR',
+                'locale' => $locale,
                 'shipping_preference' => 'SET_PROVIDED_ADDRESS',
             ],
             'transactions' => [
                 [
                     'amount' => [
-                        'currency' => 'BRL',
+                        'currency' => $currency_code,
                         'total' => $total,
                         'details' => [
                             'subtotal' => $subtotal,
@@ -329,7 +362,7 @@ final class PayPalPlus
                         'shipping_address' => [
                             'line1' => $line1,
                             'city' => $city,
-                            'country_code' => $country_code,
+                            'country_code' => $country,
                             'postal_code' => $postal_code,
                             'state' => $state
                         ],
@@ -351,20 +384,20 @@ final class PayPalPlus
      * @return object
      */
     public function setExecute() {
-        $inputs = ['sandbox', 'client_id', 'client_secret', 'payment_id', 'payer_id'];
+        $inputs = ['sandbox', 'client_id', 'client_secret', 'country_code', 'payment_id', 'payer_id'];
         $parameters = $this->validateParameters($inputs);
         if ($parameters == false) {
-            throw new \Exception('Erro 412 (Precondition Failed). O parâmetro ' . $this->_input . ' não foi enviado para executar o pagamento no PayPal.');
+            throw new \Exception('Erro 412 (Precondition Failed). The parameter ' . $this->_input . ' was not sent to execute payment on PayPal.');
         }
 
         $payment_id = trim($this->_parameter['payment_id']);
         if (empty($payment_id)) {
-            throw new \Exception('Erro 412 (Precondition Failed). O payment_id não foi informado.');
+            throw new \Exception('Erro 412 (Precondition Failed). The payment_id has not been set.');
         }
 
         $payer_id = trim($this->_parameter['payer_id']);
         if (empty($payer_id)) {
-            throw new \Exception('Erro 412 (Precondition Failed). O payer_id não foi informado.');
+            throw new \Exception('Erro 412 (Precondition Failed). The payer_id has not been set.');
         }
 
         $this->_authorization = 'Authorization: Bearer ' . $this->getToken();
@@ -381,30 +414,30 @@ final class PayPalPlus
      * @return object
      */
     public function setRefund() {
-        $inputs = ['sandbox', 'client_id', 'client_secret', 'sale_id', 'amount', 'currency', 'invoice_number'];
+        $inputs = ['sandbox', 'client_id', 'client_secret', 'country_code', 'sale_id', 'amount', 'currency', 'invoice_number'];
         $parameters = $this->validateParameters($inputs);
         if ($parameters == false) {
-            throw new \Exception('Erro 412 (Precondition Failed). O parâmetro ' . $this->_input . ' não foi enviado para solicitar o reembolso no PayPal.');
+            throw new \Exception('Erro 412 (Precondition Failed). The parameter ' . $this->_input . ' was not sent to request a refund on PayPal.');
         }
 
         $sale_id = trim($this->_parameter['sale_id']);
         if (empty($sale_id)) {
-            throw new \Exception('Erro 412 (Precondition Failed). O sale_id não foi informado.');
+            throw new \Exception('Erro 412 (Precondition Failed). The sale_id has not been set.');
         }
 
         $amount = $this->_parameter['amount'];
         if ($amount <= 0) {
-            throw new \Exception('Erro 412 (Precondition Failed). O valor para reembolso não é válido.');
+            throw new \Exception('Erro 412 (Precondition Failed). The refund amount is not valid.');
         }
 
         $currency = trim($this->_parameter['currency']);
         if (empty($currency)) {
-            throw new \Exception('Erro 412 (Precondition Failed). O código da moeda não foi informado.');
+            throw new \Exception('Erro 412 (Precondition Failed). The currency has not been set.');
         }
 
         $invoice_number = $this->_parameter['invoice_number'];
         if ($invoice_number == '') {
-            throw new \Exception('Erro 412 (Precondition Failed). O código do pedido não foi informado.');
+            throw new \Exception('Erro 412 (Precondition Failed). The invoice_number has not been set.');
         }
 
         $this->_authorization = 'Authorization: Bearer ' . $this->getToken();
@@ -427,15 +460,15 @@ final class PayPalPlus
      * @return object
      */
     public function getSale() {
-        $inputs = ['sandbox', 'client_id', 'client_secret', 'sale_id'];
+        $inputs = ['sandbox', 'client_id', 'client_secret', 'country_code', 'sale_id'];
         $parameters = $this->validateParameters($inputs);
         if ($parameters == false) {
-            throw new \Exception('Erro 412 (Precondition Failed). O parâmetro ' . $this->_input . ' não foi enviado para consultar a situação do pedido no PayPal.');
+            throw new \Exception('Erro 412 (Precondition Failed). The parameter ' . $this->_input . ' was not sent to check order status on PayPal.');
         }
 
         $sale_id = trim($this->_parameter['sale_id']);
         if (empty($sale_id)) {
-            throw new \Exception('Erro 412 (Precondition Failed). O sale_id não foi informado.');
+            throw new \Exception('Erro 412 (Precondition Failed). The sale_id has not been set.');
         }
 
         $this->_authorization = 'Authorization: Bearer ' . $this->getToken();
@@ -452,15 +485,15 @@ final class PayPalPlus
      * @return object
      */
     public function getSearch() {
-        $inputs = ['sandbox', 'client_id', 'client_secret', 'payment_id'];
+        $inputs = ['sandbox', 'client_id', 'client_secret', 'country_code', 'payment_id'];
         $parameters = $this->validateParameters($inputs);
         if ($parameters == false) {
-            throw new \Exception('Erro 412 (Precondition Failed). O parâmetro ' . $this->_input . ' não foi enviado para consultar a situação do pagamento no PayPal.');
+            throw new \Exception('Erro 412 (Precondition Failed). The parameter ' . $this->_input . ' was not sent to check payment status on PayPal.');
         }
 
         $payment_id = trim($this->_parameter['payment_id']);
         if (empty($payment_id)) {
-            throw new \Exception('Erro 412 (Precondition Failed). O payment_id não foi informado.');
+            throw new \Exception('Erro 412 (Precondition Failed). The payment_id has not been set.');
         }
 
         $this->_authorization = 'Authorization: Bearer ' . $this->getToken();
@@ -473,7 +506,7 @@ final class PayPalPlus
     }
 
     /**
-     * Obtém o access_token para autenticar o request na API
+     * Get access_token to authenticate request to API
      *
      * @throws \Exception
      * @return object
@@ -481,12 +514,12 @@ final class PayPalPlus
     private function getToken() {
         $client_id = trim($this->_parameter['client_id']);
         if (empty($client_id)) {
-            throw new \Exception('Erro 412 (Precondition Failed). O Client ID não foi informado.');
+            throw new \Exception('Erro 412 (Precondition Failed). The Client ID has not been set.');
         }
 
         $client_secret = trim($this->_parameter['client_secret']);
         if (empty($client_secret)) {
-            throw new \Exception('Erro 412 (Precondition Failed). O Client Secret não foi informado.');
+            throw new \Exception('Erro 412 (Precondition Failed). The Secret has not been set.');
         }
 
         $this->_authorization = 'Authorization: Basic ' . base64_encode($client_id . ':' . $client_secret);
@@ -498,14 +531,14 @@ final class PayPalPlus
         $response = $this->connect();
 
         if (!isset($response->access_token)) {
-            throw new \Exception('Erro 412 (Precondition Failed). O access_token não foi gerado pela API do PayPal.');
+            throw new \Exception('Erro 412 (Precondition Failed). Access_token was not generated by the PayPal API.');
         }
 
         return $response->access_token;
     }
 
     /**
-     * Realiza a comunicação com a API
+     * Connect API
      *
      * @throws \Exception
      * @return object
@@ -554,7 +587,7 @@ final class PayPalPlus
             $json = json_decode($response);
 
             if ($json === false || $json === null) {
-                throw new \Exception('Erro 412 (Precondition Failed). Não foi possível decodificar o json recebido através da API do PayPal.');
+                throw new \Exception('Erro 412 (Precondition Failed). It was not possible to decode the json received through the PayPal API.');
             }
 
             return $json;
@@ -562,74 +595,74 @@ final class PayPalPlus
 
         switch ($code) {
             case '401':
-                throw new \Exception('Erro 401 (Unauthorized). Verifique em sua conta no PayPal se seu Cliente ID e Client Secret são válidos.');
+                throw new \Exception('Erro 401 (Unauthorized). Check in your PayPal account that your Client ID and Secret are valid.');
             case '403':
-                throw new \Exception('Erro 403 (Forbidden). Verifique em sua conta no PayPal se seu Cliente ID e Client Secret são válidos.');
+                throw new \Exception('Erro 403 (Forbidden). Check in your PayPal account that your Client ID and Secret are valid.');
             case '404':
-                throw new \Exception('Erro 404 (Resource Not Found). O recurso solicitado não foi encontrado na API do PayPal.');
+                throw new \Exception('Erro 404 (Resource Not Found). The requested resource was not found in the PayPal API.');
             case '405':
-                throw new \Exception('Erro 405 (Method Not Supported). O método utilizado não foi implementado na API do PayPal.');
+                throw new \Exception('Erro 405 (Method Not Supported). The method used was not implemented in the PayPal API.');
             case '406':
-                throw new \Exception('Erro 406 (Media Type Not Acceptable). O formato de resposta solicitado não está disponível na API do PayPal.');
+                throw new \Exception('Erro 406 (Media Type Not Acceptable). The requested response format is not available in the PayPal API.');
             case '408':
-                throw new \Exception('Erro 408 (Request Timed Out). Tempo esgotado para requisição na API do PayPal.');
+                throw new \Exception('Erro 408 (Request Timed Out). PayPal API timeout.');
             case '413':
-                throw new \Exception('Erro 413 (Request Entity Too Long). A requisição excede o tamanho máximo permitido pela API do PayPal.');
+                throw new \Exception('Erro 413 (Request Entity Too Long). The request exceeds the maximum size allowed by the PayPal API.');
             case '415':
-                throw new \Exception('Erro 415 (Unsupported Media Type). O formado de conteúdo enviado não foi aceito pela API do PayPal.');
+                throw new \Exception('Erro 415 (Unsupported Media Type). The submitted content format was not accepted by the PayPal API.');
             case '422':
-                throw new \Exception('Erro 422 (Unprocessable Entity). Não foi possível processar a solicitação na API do PayPal.');
+                throw new \Exception('Erro 422 (Unprocessable Entity). The request could not be processed in the PayPal API.');
             case '429':
-                throw new \Exception('Erro 429 (Rate Limit Reached). Atingiu o limite de solicitações para a API do PayPal.');
+                throw new \Exception('Erro 429 (Rate Limit Reached). You have reached the request limit for the PayPal API.');
             case '500':
-                throw new \Exception('Erro 500 (Internal Server Error). A API do PayPal não respondeu devido problemas técnicos. Entre em contato com o PayPal para mais informações.');
+                throw new \Exception('Erro 500 (Internal Server Error). The PayPal API did not respond due to technical problems. Contact PayPal for more information.');
             case '501':
-                throw new \Exception('Erro 501 (Not Implemented). A API do PayPal não respondeu devido problemas técnicos. Entre em contato com o PayPal para mais informações.');
+                throw new \Exception('Erro 501 (Not Implemented). The PayPal API did not respond due to technical problems. Contact PayPal for more information.');
             case '503':
-                throw new \Exception('Erro 503 (Service Unavailable). A API do PayPal não respondeu devido manutenção temporária. Entre em contato com o PayPal para mais informações.');
+                throw new \Exception('Erro 503 (Service Unavailable). The PayPal API did not respond due to temporary maintenance. Contact PayPal for more information.');
             case '504':
-                throw new \Exception('Erro 504 (Gateway Timeout). Tempo esgotado para requisição na API do PayPal. Entre em contato com o PayPal para mais informações.');
+                throw new \Exception('Erro 504 (Gateway Timeout). Time out for requesting in PayPal API. Contact PayPal for more information.');
             default:
                 throw new \Exception('Erro não identificado.');
         }
     }
 
     /**
-     * Verifica os requisitos básicos para utilização da classe
+     * Checks basic requirements
      *
      * @throws \Exception
      * @return void
      */
     private function validateRequirements() {
         if (phpversion() < '7.3') {
-            throw new \Exception('É necessário utilizar no mínimo PHP 7.3 para se comunicar com a API do PayPal.');
+            throw new \Exception('Erro 412 (Precondition Failed). At least PHP 7.3 is required to communicate with a PayPal API.');
         }
 
         if (extension_loaded('mbstring')) {
             mb_internal_encoding('UTF-8');
         } else {
-            throw new \Exception('Erro 412 (Precondition Failed). A extensão mbstring do PHP está desabilitada em sua hospedagem. Entre em contato com o suporte de sua hospedagem, e solicite que habilitem a extensão.');
+            throw new \Exception('Erro 412 (Precondition Failed). The mbstring PHP extension is disabled on your hosting. Contact your hosting support, and ask them to enable the extension.');
         }
 
         if (!extension_loaded('curl')) {
-            throw new \Exception('Erro 412 (Precondition Failed). A extensão curl do PHP está desabilitada em sua hospedagem. Entre em contato com o suporte de sua hospedagem, e solicite que habilitem a extensão.');
+            throw new \Exception('Erro 412 (Precondition Failed). The PHP curl extension is disabled on your hosting. Contact your hosting support, and ask them to enable the extension.');
         }
 
         if (!extension_loaded('json')) {
-            throw new \Exception('Erro 412 (Precondition Failed). A extensão json do PHP está desabilitada em sua hospedagem. Entre em contato com o suporte de sua hospedagem e solicite que habilitem a extensão.');
+            throw new \Exception('Erro 412 (Precondition Failed). The PHP json extension is disabled on your hosting. Contact your hosting support and ask them to enable the extension.');
         }
 
         if (!function_exists('json_encode')) {
-            throw new \Exception('Erro 412 (Precondition Failed). A função json_encode do PHP está desabilitada em sua hospedagem. Entre em contato com o suporte de sua hospedagem e solicite que habilitem a função.');
+            throw new \Exception('Erro 412 (Precondition Failed). PHP json_encode function is disabled on your hosting. Contact your hosting support and ask them to enable the function.');
         }
 
         if (!function_exists('json_decode')) {
-            throw new \Exception('Erro 412 (Precondition Failed). A função json_decode do PHP está desabilitada em sua hospedagem. Entre em contato com o suporte de sua hospedagem e solicite que habilitem a função.');
+            throw new \Exception('Erro 412 (Precondition Failed). PHP json_decode function is disabled on your hosting. Contact your hosting support and ask them to enable the function.');
         }
     }
 
     /**
-     * Valida se todos os parâmetros esperados para a composição do request foram enviados
+     * Validates that all parameters expected by request have been sent
      *
      * @param array $inputs
      * @return bool
@@ -647,7 +680,7 @@ final class PayPalPlus
     }
 
     /**
-     * Retorna parte de uma string UTF-8
+     * Returns part of UTF-8 string
      *
      * @param string $string
      * @param int $offset
