@@ -14,5 +14,5 @@ e utiliza [Semantic Versioning](https://semver.org/lang/pt-BR/spec/v2.0.0.html).
 ## 1.0.0 (Data de lançamento: 30.10.2020)
 - Versão inicial
 
-[Não lançada]: https://github.com/opencartbrasil/opencartbrasil/compare/1.1.0...HEAD
-[1.1.0]: https://github.com/opencartbrasil/opencartbrasil/compare/1.0.0...1.1.0
+[Não lançada]: https://github.com/br-paypaldev/opencart-module/compare/1.1.0...HEAD
+[1.1.0]: https://github.com/br-paypaldev/opencart-module/compare/1.0.0...1.1.0
