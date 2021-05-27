@@ -81,7 +81,7 @@ class ModelPaymentPayPalPlus extends Model {
 
     public function getOrderProducts($order_id) {
         $query = $this->db->query("
-            SELECT p.product_id, op.name, op.price, op.tax, op.quantity
+            SELECT p.product_id, p.tax_class_id, op.name, op.price, op.quantity
             FROM `" . DB_PREFIX . "order_product` op
             INNER JOIN `" . DB_PREFIX . "product` p ON (op.product_id = p.product_id)
             WHERE op.order_id = '" . (int) $order_id . "'

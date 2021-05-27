@@ -418,7 +418,8 @@ class ControllerPaymentPayPalPlus extends Controller {
         );
 
         if ($this->request->post['country'] == 'BR') {
-            array_push($errors, array('custom_document_id', 'custom_number_id'));
+            array_push($errors, 'custom_document_id');
+            array_push($errors, 'custom_number_id');
         }
 
         foreach ($errors as $error) {

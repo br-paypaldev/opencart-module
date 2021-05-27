@@ -2,9 +2,9 @@
 <modification>
   <name>PayPal Plus for OpenCart 2.0 to 2.2</name>
   <code>paypal-plus</code>
-  <version>1.1.0</version>
-  <author>PayPal</author>
-  <link>https://www.paypal.com/</link>
+  <version>1.1.1</version>
+  <author>PayPal Brazil</author>
+  <link>https://www.paypal.com/br/</link>
   <file path="admin/controller/common/menu.php">
     <operation>
       <search><![CDATA[return]]></search>

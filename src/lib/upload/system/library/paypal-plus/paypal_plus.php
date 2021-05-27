@@ -5,7 +5,7 @@
  * Class for PayPal Plus API
  * @package PayPal Plus
  * @author PayPal Brazil
- * @version 1.1.0
+ * @version 1.1.1
  * @copyright Copyright (c) PayPal Brazil
  * @link https://www.paypal.com/br/
  */

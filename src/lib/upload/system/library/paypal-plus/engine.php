@@ -4,7 +4,7 @@ trait PayPalPlusEngine
     /*
     * Current version of extension.
     */
-    private static $paypal_plus_version = '1.1.0';
+    private static $paypal_plus_version = '1.1.1';
 
     /*
     * Github repository URL.

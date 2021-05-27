@@ -744,16 +744,17 @@
             $('#table-my-webhooks').DataTable().destroy();
             $('#table-my-webhooks').hide();
             $('#add-webhook').show();
-          }
-          else if (jsonData.error) {
+          } else if (jsonData.error) {
             $('html, body').animate({ scrollTop: 0 }, 'slow');
             $('#progress').html('<div class="alert alert-warning"><i class="fa fa-spinner fa-spin"></i> ' + jsonData.error + '</div>');
           } else {
             if (jsonData.webhook_id) {
               $('#webhook_id').val(jsonData.webhook_id);
+              $('#add-webhook').hide();
+            } else {
+              $('#add-webhook').show();
             }
             $('#table-my-webhooks').show();
-            $('#add-webhook').hide();
             $('#table-my-webhooks').DataTable({
               "order": [],
               "columnDefs": [
@@ -782,6 +783,8 @@
         url: 'index.php?route=extension/payment/paypal_plus/listWebhooksEventTypes&token=<?php echo $token; ?>', dataType: 'json',
         beforeSend: function() {
           $(this).prop('disabled', true);
+          $('#table-my-webhooks').DataTable().destroy();
+          $('#table-my-webhooks').hide();
           $('#add-webhook').hide();
           $('html, body').animate({ scrollTop: 0 }, 'slow');
           $('#progress').html('<div class="alert alert-warning"><i class="fa fa-spinner fa-spin"></i> <?php echo $text_webhook_add; ?></div>');

@@ -92,34 +92,42 @@ class ControllerPaymentPayPalPlus extends Controller {
 
         $this->load->model(self::EXTENSION);
 
+        $subtotal = 0;
         $parameters = array();
         $parameters['items'] = array();
 
         $products = $this->{self::MODEL}->getOrderProducts($order_id);
 
         foreach ($products as $product) {
-            $price = $product['price'] * $currency_value;
+            $quantity = $product['quantity'];
+            $price = $this->currency->format($product['price'], $currency_code, $currency_value, false);
+            $price = number_format($price, 2, '.', '');
+
+            $subtotal += $price * $quantity;
 
             $parameters['items'][] = array(
                 'sku' => $product['product_id'],
                 'name' => $product['name'],
                 'description' => $product['name'],
-                'quantity' => $product['quantity'],
-                'price' => number_format($price, 2, '.', ''),
+                'quantity' => $quantity,
+                'price' => $price,
                 'url' => $this->url->link('product/product', 'product_id=' . $product['product_id'], true)
             );
         }
 
         if (!empty($this->session->data['vouchers'])) {
             foreach ($this->session->data['vouchers'] as $voucher) {
-                $price = $voucher['amount'] * $currency_value;
+                $price = $this->currency->format($voucher['amount'], $currency_code, $currency_value, false);
+                $price = number_format($price, 2, '.', '');
+
+                $subtotal += $price;
 
                 $parameters['items'][] = array(
                     'sku' => 'voucher',
                     'name' => $voucher['description'],
                     'description' => $voucher['description'],
                     'quantity' => '1',
-                    'price' => number_format($price, 2, '.', ''),
+                    'price' => $price,
                     'url' => ''
                 );
             }
@@ -129,10 +137,9 @@ class ControllerPaymentPayPalPlus extends Controller {
         $discount_value = 0;
 
         $taxes_fees = array('tax', 'low_order_fee', 'handling');
+
         $taxes_fees_description = '';
         $taxes_fees_value = 0;
-
-        $total_value = 0;
 
         $order_totals = $this->{self::MODEL}->getOrderTotals($order_id);
         foreach ($order_totals as $order_total) {
@@ -145,47 +152,48 @@ class ControllerPaymentPayPalPlus extends Controller {
                 $taxes_fees_description .= $order_total['title'] . '/';
                 $taxes_fees_value += $order_total['value'];
             }
-
-            if ($order_total['code'] == 'total') {
-                $total_value = $order_total['value'];
-            }
         }
 
         if ($discount_value > 0) {
             $discount_description = rtrim($discount_description, '/');
-            $price = $discount_value * $currency_value;
+
+            $price = $this->currency->format($discount_value, $currency_code, $currency_value, false);
+            $price = number_format($price, 2, '.', '');
+
+            $subtotal -= $price;
 
             $parameters['items'][] = array(
                 'sku' => 'discount',
                 'name' => $discount_description,
                 'description' => $discount_description,
                 'quantity' => '1',
-                'price' => '-' . number_format($price, 2, '.', ''),
+                'price' => '-' . $price,
                 'url' => ''
             );
         }
 
         if ($taxes_fees_value > 0) {
             $taxes_fees_description = rtrim($taxes_fees_description, '/');
-            $price = $taxes_fees_value * $currency_value;
+
+            $price = $this->currency->format($taxes_fees_value, $currency_code, $currency_value, false);
+            $price = number_format($price, 2, '.', '');
+
+            $subtotal += $price;
 
             $parameters['items'][] = array(
                 'sku' => 'taxes',
                 'name' => $taxes_fees_description,
                 'description' => $taxes_fees_description,
                 'quantity' => '1',
-                'price' =>  number_format($price, 2, '.', ''),
+                'price' => $price,
                 'url' => ''
             );
         }
 
         $shipping = $this->{self::MODEL}->getOrderShippingValue($order_id);
+
         if ($shipping > 0) {
             $shipping = $this->currency->format($shipping, $currency_code, $currency_value, false);
-        }
-
-        if ($total_value > 0) {
-            $total_value = $this->currency->format($total_value, $currency_code, $currency_value, false);
         }
 
         $fields = $this->fields();
@@ -334,9 +342,9 @@ class ControllerPaymentPayPalPlus extends Controller {
         $parameters['country_code'] = $country_code;
         $parameters['currency_code'] = $currency_code;
 
-        $parameters['subtotal'] = substr(number_format($total_value - $shipping, 4, '.', ''), 0, -2);
+        $parameters['subtotal'] = number_format($subtotal, 2, '.', '');
         $parameters['shipping'] = number_format($shipping, 2, '.', '');
-        $parameters['total'] = substr(number_format($total_value, 4, '.', ''), 0, -2);
+        $parameters['total'] = number_format($parameters['subtotal'] + $parameters['shipping'], 2, '.', '');
 
         $parameters['store_name'] = $store_name;
         $parameters['postcode'] = $postcode;

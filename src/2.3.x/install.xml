@@ -2,9 +2,9 @@
 <modification>
   <name>PayPal Plus for OpenCart 2.3</name>
   <code>paypal-plus</code>
-  <version>1.1.0</version>
-  <author>PayPal</author>
-  <link>https://www.paypal.com/</link>
+  <version>1.1.1</version>
+  <author>PayPal Brazil</author>
+  <link>https://www.paypal.com/br/</link>
   <file path="admin/controller/startup/permission.php">
     <operation>
       <search><![CDATA[$extension = array(]]></search>

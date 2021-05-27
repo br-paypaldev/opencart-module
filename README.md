@@ -1,13 +1,13 @@
 # Checkout Transparente PayPal para OpenCart 2 e 3
 ![](https://raw.githubusercontent.com/wiki/paypal/PayPal-PHP-SDK/images/homepage.jpg)
 
-A experiência de um Checkout Transparente processado com a segurança do PayPal. Seu cliente efetua o pagamento diretamente no seu site, sem redirecionamento e sem a necessidade de abertura de uma conta PayPal, utilizando os dados cartão de crédito, que podem ser salvos para agilizar o pagamento em futuras compras.
+A experiência de um Checkout Transparente processado com a segurança do PayPal. Seu cliente fará o pagamento diretamente no seu site, sem redirecionamento e sem a necessidade de abertura de uma conta PayPal, utilizando apenas os dados do cartão de crédito, que poderão ser salvos para agilizar o pagamento de futuras compras.
 
 
 ## Requisitos
 
-Para o correto funcionamento das soluções, é necessário verificar se a sua loja e servidor suportam alguns recursos:
-1. Para o checkout transparente (PayPal Plus), a sua loja precisa ter suporte aos campos CPF (tipo Conta) e Número (tipo Endereço), portanto antes de ativar a solução garanta que a sua loja está devidamente configurada para suportar estes campos;
+Para o correto funcionamento da solução, é necessário verificar se a sua loja e servidor suportam alguns recursos:
+1. Sua loja precisa ter suporte aos campos personalizados CPF (tipo Conta) e Número (tipo Endereço), portanto antes de ativar a solução garanta que a sua loja está devidamente configurada para suportar estes campos;
 2. O servidor precisa ter suporte à PHP 7.3 ou superior;
 3. O servidor precisa ter suporte à TLS 1.2 ou superior e HTTPS 1.1 [(Referência Oficial)](https://www.paypal.com/sg/webapps/mpp/tls-http-upgrade).
 
@@ -21,7 +21,7 @@ A solução requer aprovação comercial, entre em contato pelo 0800 721 6959 e 
 
 ## Compatibilidade
 
-Este módulo é compatível com OpenCart versões 2.0.1.1 até 3.0.3.6. 
+Este módulo é compatível com OpenCart versões **2.0.1.1 até 3.0.3.7**.
 
 ## Instalação
 
@@ -33,26 +33,24 @@ Este módulo é compatível com OpenCart versões 2.0.1.1 até 3.0.3.6.
 
 ## Configuração
 ### - Credenciais de API
-Para configurar as soluções PayPal, você deverá gerar as credenciais de API do tipo REST, no caso o Client ID e o Secret ID.
+Para configurar a solução PayPal Plus, você deverá gerar as credenciais de API do tipo REST, no caso o Client ID e o Secret ID.
 
 Para obtê-las siga este passo-a-passo:
-                
+
 1. Efetuar o login com sua conta PayPal em https://developer.paypal.com e clique no link na parte superior "**Dashboard**";
 2. Clique em "**My Apps & Credentials**";
 3. Abaixo de "**Rest API apps**" clique em "**Create App**";
 4. Em seguida, insira o termo "**ppplus**" no campo "**App Name**" e clique em "**Create App**";
 5. No canto superior direito da tela, clique em "**Live**";
-6. Você deve copiar os códigos que aparecerem em "**Client ID**" e em "**Secret**" (para visualizar o "Secret" será necessário clicar em "**Show**") e colar estes códigos na página de configuração da solução que irá utilizar. 
+6. Você deve copiar os códigos que aparecerem em "**Client ID**" e em "**Secret**" (para visualizar o "Secret" será necessário clicar em "**Show**") e colar estes códigos na página de configuração da solução que irá utilizar.
 
-### - Solução
+### - Campos Personalizados
 
-Para o Checkout Transparente funcionar, sua loja precisará ter cadastrado os campos CPF (tipo Conta) e Número (tipo Endereço).
+Para o Checkout Transparente funcionar corretamente, sua loja precisará ter cadastrado os campos personalizados CPF (tipo Conta) e Número (tipo Endereço).
 
-Para cadastrá-los siga este passo-a-passo dentro do painel administrativo do seu OpenCart:
+Para cadastrá-los vá ao menu **Clientes→Personalizar cadastro**.
 
-Vá ao menu **Clientes→Personalizar cadastro**, e clique no botão **Novo**.
-
-Para cadastrar o **CPF**, preencha o formulário com as informações abaixo:
+Para cadastrar o campo **CPF**, clique no botão **Novo**, preencha o formulário com as informações abaixo:
 
 | Campo | Valor |
 | -------- | ----- |
@@ -65,7 +63,7 @@ Para cadastrar o **CPF**, preencha o formulário com as informações abaixo:
 
 Após preencher o formulário, clique no botão **Salvar**.
 
-Para cadastrar o **Número**, clique novamente no botão **Novo** e preencha o formulário com as informações abaixo:
+Para cadastrar o campo **Número**, clique no botão **Novo**, preencha o formulário com as informações abaixo:
 
 | Campo | Valor |
 | -------- | ----- |
@@ -82,7 +80,7 @@ Após preencher o formulário, clique no botão **Salvar**.
 
 Caso a sua dúvida não tenha sido respondida aqui, entre em contato com o PayPal pelo número 0800 047 4482.
 
-E caso necessite de algum suporte técnico e/ou acredita ter encontrado algum problema com este módulo acesse o nosso [portal de suporte técnico](https://www.paypal-support.com/s/?language=pt_BR) e abra um ticket detalhando o seu problema na seção "Fale Conosco".
+E caso necessite de algum suporte técnico e/ou acredita ter encontrado algum problema com este módulo, acesse o nosso [portal de suporte técnico](https://www.paypal-support.com/s/?language=pt_BR) e abra um ticket detalhando o seu problema na seção "Fale Conosco".
 
 ## Changelog
 
